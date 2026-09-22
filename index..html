@@ -1,1 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Obsidian Circle | Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Load Supabase securely from their official network -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
 
+    <div class="login-container">
+        <div class="logo-symbol">◎</div>
+        <h1>The Obsidian Circle</h1>
+        <div class="motto">Knowledge. Unity. Purpose.</div>
+
+        <form id="login-form">
+            <div class="input-group">
+                <label>MEMBER ID</label>
+                <input type="text" id="member-id" placeholder="e.g. FOUNDER-01" required autocomplete="off">
+            </div>
+            
+            <div class="input-group">
+                <label>PASSWORD</label>
+                <input type="password" id="password" required>
+            </div>
+
+            <button type="submit" id="login-btn">AUTHENTICATE</button>
+            <div id="error-message"></div>
+        </form>
+    </div>
+
+    <!-- Load our custom engine -->
+    <script src="app.js"></script>
+</body>
+</html>
+  
