@@ -36,22 +36,28 @@
             background-color: #070709; border: 1px solid #444; border-left: 4px solid #6c757d;
             padding: 15px; margin-bottom: 15px; border-radius: 4px; position: relative;
         }
+        .my-team-card { border-left: 4px solid #4CAF50; }
         .team-name { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 1px; margin-bottom: 8px; }
         .team-focus { font-size: 13px; color: #aaa; margin-bottom: 10px; line-height: 1.4; }
         .team-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .team-lead { font-size: 11px; color: #666; letter-spacing: 1px; }
         .capacity-meter { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
         
-        .join-btn {
-            background-color: #333; color: #fff; border: 1px solid #555; padding: 6px 12px;
-            border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; letter-spacing: 1px;
-        }
-        .join-btn:hover { background-color: #4CAF50; color: #fff; border-color: #4CAF50; }
+        .join-btn { background-color: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
+        .join-btn:hover { background-color: #4CAF50; border-color: #4CAF50; }
+        .leave-btn { background-color: #333; color: #ff5555; border: 1px solid #ff5555; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
+        .chat-toggle-btn { background-color: #4CAF50; color: #fff; border: 1px solid #4CAF50; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; letter-spacing: 1px; margin-right: 5px; }
 
-        .back-btn {
-            background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
-            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
-        }
+        /* Integrated Chat Box Styles */
+        .chat-box { background-color: #000; border: 1px solid #333; border-radius: 4px; margin-top: 15px; display: none; }
+        .chat-history { height: 180px; overflow-y: auto; padding: 10px; font-size: 13px; color: #ccc; }
+        .chat-history p { margin: 0 0 8px 0; line-height: 1.4; }
+        .chat-sender { color: #4CAF50; font-weight: bold; }
+        .chat-controls { display: flex; border-top: 1px solid #333; }
+        .chat-controls input { flex: 1; border: none; background: transparent; padding: 10px; margin: 0; color: #fff; font-size: 13px; outline: none; }
+        .chat-controls button { background-color: #333; color: #fff; border: none; padding: 0 15px; font-weight: bold; cursor: pointer; }
+
+        .back-btn { background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%; padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -59,9 +65,9 @@
     <div class="teams-container" id="main-box" style="display: none;">
         <div class="header-title">◎ ACTIVE TEAMS [ <span class="team-count" id="count-display">-</span> ]</div>
         
-        <div class="create-box">
+        <div class="create-box" id="deploy-panel">
             <div class="create-title">+ DEPLOY NEW TEAM</div>
-            <input type="text" id="input-team-name" placeholder="TEAM NAME (e.g. OMEGA TEAM)" autocomplete="off">
+            <input type="text" id="input-team-name" placeholder="TEAM NAME" autocomplete="off">
             <input type="text" id="input-team-focus" placeholder="PRIMARY FOCUS AREA" autocomplete="off">
             <input type="text" id="input-team-code" placeholder="SET SECRET INVITE CODE" autocomplete="off">
             <button class="action-btn" id="btn-create">AUTHORIZE DEPLOYMENT</button>
@@ -80,121 +86,156 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let myCodename = "UNKNOWN";
+        let myUserId = null;
+        let myActiveTeam = "NONE";
+        let chatInterval = null;
 
         document.addEventListener("DOMContentLoaded", async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { window.location.replace("index.html"); return; }
+            myUserId = session.user.id;
 
             document.getElementById("main-box").style.display = "block";
 
-            const { data: profile } = await supabaseClient.from('profiles').select('codename').eq('id', session.user.id).single();
-            if (profile) myCodename = profile.codename;
-
+            await fetchProfile();
             loadTeams();
 
             document.getElementById("btn-create").addEventListener("click", async () => {
-                const nameInput = document.getElementById("input-team-name");
-                const focusInput = document.getElementById("input-team-focus");
-                const codeInput = document.getElementById("input-team-code");
-                
-                const tName = nameInput.value.trim().toUpperCase();
-                const tFocus = focusInput.value.trim();
-                const tCode = codeInput.value.trim();
+                if (myActiveTeam !== "NONE") { alert("DEPLOYMENT BLOCKED: You must leave your current team first."); return; }
+                const tName = document.getElementById("input-team-name").value.trim().toUpperCase();
+                const tFocus = document.getElementById("input-team-focus").value.trim();
+                const tCode = document.getElementById("input-team-code").value.trim();
 
-                if (!tName || !tFocus || !tCode) {
-                    alert("Please provide a Name, Focus Area, and an Invite Code.");
-                    return;
-                }
+                if (!tName || !tFocus || !tCode) { alert("Please provide all fields."); return; }
 
-                const { error } = await supabaseClient.from('teams').insert([
-                    { team_name: tName, focus_area: tFocus, invite_code: tCode, lead_codename: myCodename }
-                ]);
-
-                if (error) {
-                    alert("DEPLOYMENT REJECTED: You do not have clearance.");
-                } else {
-                    nameInput.value = "";
-                    focusInput.value = "";
-                    codeInput.value = "";
+                const { error } = await supabaseClient.from('teams').insert([{ team_name: tName, focus_area: tFocus, invite_code: tCode, lead_codename: myCodename }]);
+                if (error) { alert("DEPLOYMENT REJECTED."); } else {
+                    await supabaseClient.from('profiles').update({ active_team: tName }).eq('id', myUserId);
+                    document.getElementById("input-team-name").value = "";
+                    document.getElementById("input-team-focus").value = "";
+                    document.getElementById("input-team-code").value = "";
+                    await fetchProfile();
                     loadTeams();
                 }
             });
         });
 
-        window.joinTeam = async function(teamId, currentCount, actualCode) {
-            if (currentCount >= 4) {
-                alert("TEAM AT MAXIMUM CAPACITY.");
-                return;
-            }
-            
-            // Prompt user for the secret code
+        async function fetchProfile() {
+            const { data: profile } = await supabaseClient.from('profiles').select('codename, active_team').eq('id', myUserId).single();
+            if (profile) { myCodename = profile.codename; myActiveTeam = profile.active_team || "NONE"; }
+            document.getElementById("deploy-panel").style.display = (myActiveTeam !== "NONE") ? "none" : "block";
+        }
+
+        window.joinTeam = async function(teamId, teamName, currentCount, actualCode) {
+            if (currentCount >= 4) { alert("TEAM FULL."); return; }
             const userAttempt = prompt("ENTER TEAM INVITE CODE:");
+            if (userAttempt === null) return; 
+            if (userAttempt !== actualCode) { alert("ACCESS DENIED."); return; }
             
-            if (userAttempt === null) return; // User hit cancel
-            
-            if (userAttempt !== actualCode) {
-                alert("ACCESS DENIED: Incorrect Invite Code.");
-                return;
-            }
-            
-            const { error } = await supabaseClient
-                .from('teams')
-                .update({ member_count: currentCount + 1 })
-                .eq('id', teamId);
-                
-            if (error) {
-                alert("JOIN REJECTED: System error or lack of clearance.");
+            await supabaseClient.from('teams').update({ member_count: currentCount + 1 }).eq('id', teamId);
+            await supabaseClient.from('profiles').update({ active_team: teamName }).eq('id', myUserId);
+            await fetchProfile();
+            loadTeams(); 
+        };
+
+        window.leaveTeam = async function(teamId, currentCount) {
+            if (!confirm("Are you sure you want to leave this team?")) return;
+            await supabaseClient.from('teams').update({ member_count: currentCount - 1 }).eq('id', teamId);
+            await supabaseClient.from('profiles').update({ active_team: 'NONE' }).eq('id', myUserId);
+            clearInterval(chatInterval); // Stop refreshing chat
+            await fetchProfile();
+            loadTeams();
+        };
+
+        window.toggleChat = function(teamName) {
+            const box = document.getElementById('chat-box-' + teamName);
+            if (box.style.display === 'none' || box.style.display === '') {
+                box.style.display = 'block';
+                loadChat(teamName);
+                chatInterval = setInterval(() => loadChat(teamName), 3000); // Auto-refresh every 3 seconds
             } else {
-                loadTeams(); 
+                box.style.display = 'none';
+                clearInterval(chatInterval);
             }
         };
 
-        async function loadTeams() {
-            const { data: teams, error } = await supabaseClient
-                .from('teams')
-                .select('*')
-                .order('created_at', { ascending: false });
+        window.loadChat = async function(teamName) {
+            const { data } = await supabaseClient.from('team_messages').select('*').eq('team_name', teamName).order('created_at', { ascending: true });
+            const history = document.getElementById('history-' + teamName);
+            if (data && history) {
+                const isAtBottom = history.scrollHeight - history.scrollTop === history.clientHeight;
+                history.innerHTML = data.map(msg => `<p><span class="chat-sender">${msg.sender_codename}:</span> ${msg.message}</p>`).join('');
+                if (isAtBottom) history.scrollTop = history.scrollHeight;
+            }
+        };
 
+        window.sendMsg = async function(teamName) {
+            const input = document.getElementById('input-' + teamName);
+            const text = input.value.trim();
+            if (!text) return;
+            
+            input.value = "";
+            await supabaseClient.from('team_messages').insert([{ team_name: teamName, sender_codename: myCodename, message: text }]);
+            loadChat(teamName);
+        };
+
+        async function loadTeams() {
+            const { data: teams, error } = await supabaseClient.from('teams').select('*').order('created_at', { ascending: false });
             const listContainer = document.getElementById("teams-list");
             const countDisplay = document.getElementById("count-display");
             
-            if (error) {
-                countDisplay.textContent = "ERR";
-                listContainer.innerHTML = `<div style="color:red; text-align:center;">Clearance Denied.</div>`;
-                return;
-            }
-
+            if (error) { listContainer.innerHTML = `<div style="color:red; text-align:center;">Clearance Denied.</div>`; return; }
             countDisplay.textContent = teams.length;
             listContainer.innerHTML = ""; 
 
-            if (teams.length === 0) {
-                listContainer.innerHTML = `<div style="text-align:center; color:#888;">0 ACTIVE TEAMS PRESENT.</div>`;
-            } else {
-                teams.forEach(team => {
-                    const isFull = team.member_count >= 4;
-                    const capacityColor = isFull ? "#ff5555" : "#4CAF50";
-                    
-                    // Pass the actual code into the button securely behind the scenes
-                    const joinButtonHtml = isFull 
-                        ? `<div style="font-size: 11px; color: #ff5555; font-weight: bold;">[ LOCKED ]</div>` 
-                        : `<button class="join-btn" onclick="joinTeam(${team.id}, ${team.member_count}, '${team.invite_code}')">JOIN TEAM</button>`;
-                    
-                    const card = document.createElement("div");
-                    card.className = "team-card";
-                    card.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div class="team-name">${team.team_name}</div>
-                            ${joinButtonHtml}
-                        </div>
-                        <div class="team-focus">FOCUS: ${team.focus_area}</div>
-                        <div class="team-footer">
-                            <div class="team-lead">LEAD: ${team.lead_codename}</div>
-                            <div class="capacity-meter" style="color: ${capacityColor};">CAPACITY: ${team.member_count} / 4</div>
+            if (teams.length === 0) { listContainer.innerHTML = `<div style="text-align:center; color:#888;">0 ACTIVE TEAMS PRESENT.</div>`; return; }
+
+            teams.forEach(team => {
+                const isFull = team.member_count >= 4;
+                const capacityColor = isFull ? "#ff5555" : "#4CAF50";
+                const isMyTeam = myActiveTeam === team.team_name;
+                
+                let actionHtml = "";
+                let chatHtml = "";
+
+                if (isMyTeam) {
+                    actionHtml = `
+                        <button class="chat-toggle-btn" onclick="toggleChat('${team.team_name}')">COMM-LINK</button>
+                        <button class="leave-btn" onclick="leaveTeam(${team.id}, ${team.member_count})">LEAVE</button>
+                    `;
+                    chatHtml = `
+                        <div class="chat-box" id="chat-box-${team.team_name}">
+                            <div class="chat-history" id="history-${team.team_name}"><div style="text-align:center; color:#555; margin-top:20px;">Establishing secure connection...</div></div>
+                            <div class="chat-controls">
+                                <input type="text" id="input-${team.team_name}" placeholder="Transmit message..." autocomplete="off">
+                                <button onclick="sendMsg('${team.team_name}')">SEND</button>
+                            </div>
                         </div>
                     `;
-                    listContainer.appendChild(card);
-                });
-            }
+                } else if (myActiveTeam !== "NONE") {
+                    actionHtml = `<div style="font-size: 11px; color: #666; font-weight: bold;">[ INELIGIBLE ]</div>`;
+                } else if (isFull) {
+                    actionHtml = `<div style="font-size: 11px; color: #ff5555; font-weight: bold;">[ LOCKED ]</div>`;
+                } else {
+                    actionHtml = `<button class="join-btn" onclick="joinTeam(${team.id}, '${team.team_name}', ${team.member_count}, '${team.invite_code}')">JOIN TEAM</button>`;
+                }
+                
+                const card = document.createElement("div");
+                card.className = "team-card" + (isMyTeam ? " my-team-card" : "");
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div class="team-name">${team.team_name}</div>
+                        <div>${actionHtml}</div>
+                    </div>
+                    <div class="team-focus">FOCUS: ${team.focus_area}</div>
+                    <div class="team-footer">
+                        <div class="team-lead">LEAD: ${team.lead_codename}</div>
+                        <div class="capacity-meter" style="color: ${capacityColor};">CAPACITY: ${team.member_count} / 4</div>
+                    </div>
+                    ${chatHtml}
+                `;
+                listContainer.appendChild(card);
+            });
         }
     </script>
 </body>
