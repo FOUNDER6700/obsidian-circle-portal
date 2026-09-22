@@ -34,7 +34,7 @@
 
         .team-card {
             background-color: #070709; border: 1px solid #444; border-left: 4px solid #6c757d;
-            padding: 15px; margin-bottom: 15px; border-radius: 4px;
+            padding: 15px; margin-bottom: 15px; border-radius: 4px; position: relative;
         }
         .team-name { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 1px; margin-bottom: 8px; }
         .team-focus { font-size: 13px; color: #aaa; margin-bottom: 10px; line-height: 1.4; }
@@ -42,6 +42,12 @@
         .team-lead { font-size: 11px; color: #666; letter-spacing: 1px; }
         .capacity-meter { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
         
+        .join-btn {
+            background-color: #333; color: #fff; border: 1px solid #555; padding: 6px 12px;
+            border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; letter-spacing: 1px;
+        }
+        .join-btn:hover { background-color: #4CAF50; color: #fff; border-color: #4CAF50; }
+
         .back-btn {
             background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
             padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
@@ -57,6 +63,7 @@
             <div class="create-title">+ DEPLOY NEW TEAM</div>
             <input type="text" id="input-team-name" placeholder="TEAM NAME (e.g. OMEGA TEAM)" autocomplete="off">
             <input type="text" id="input-team-focus" placeholder="PRIMARY FOCUS AREA" autocomplete="off">
+            <input type="text" id="input-team-code" placeholder="SET SECRET INVITE CODE" autocomplete="off">
             <button class="action-btn" id="btn-create">AUTHORIZE DEPLOYMENT</button>
         </div>
 
@@ -88,18 +95,19 @@
             document.getElementById("btn-create").addEventListener("click", async () => {
                 const nameInput = document.getElementById("input-team-name");
                 const focusInput = document.getElementById("input-team-focus");
+                const codeInput = document.getElementById("input-team-code");
                 
                 const tName = nameInput.value.trim().toUpperCase();
                 const tFocus = focusInput.value.trim();
+                const tCode = codeInput.value.trim();
 
-                if (!tName || !tFocus) {
-                    alert("Please provide both a Team Name and a Focus Area.");
+                if (!tName || !tFocus || !tCode) {
+                    alert("Please provide a Name, Focus Area, and an Invite Code.");
                     return;
                 }
 
-                // Member count defaults to 1 securely on the backend
                 const { error } = await supabaseClient.from('teams').insert([
-                    { team_name: tName, focus_area: tFocus, lead_codename: myCodename }
+                    { team_name: tName, focus_area: tFocus, invite_code: tCode, lead_codename: myCodename }
                 ]);
 
                 if (error) {
@@ -107,10 +115,39 @@
                 } else {
                     nameInput.value = "";
                     focusInput.value = "";
+                    codeInput.value = "";
                     loadTeams();
                 }
             });
         });
+
+        window.joinTeam = async function(teamId, currentCount, actualCode) {
+            if (currentCount >= 4) {
+                alert("TEAM AT MAXIMUM CAPACITY.");
+                return;
+            }
+            
+            // Prompt user for the secret code
+            const userAttempt = prompt("ENTER TEAM INVITE CODE:");
+            
+            if (userAttempt === null) return; // User hit cancel
+            
+            if (userAttempt !== actualCode) {
+                alert("ACCESS DENIED: Incorrect Invite Code.");
+                return;
+            }
+            
+            const { error } = await supabaseClient
+                .from('teams')
+                .update({ member_count: currentCount + 1 })
+                .eq('id', teamId);
+                
+            if (error) {
+                alert("JOIN REJECTED: System error or lack of clearance.");
+            } else {
+                loadTeams(); 
+            }
+        };
 
         async function loadTeams() {
             const { data: teams, error } = await supabaseClient
@@ -134,13 +171,21 @@
                 listContainer.innerHTML = `<div style="text-align:center; color:#888;">0 ACTIVE TEAMS PRESENT.</div>`;
             } else {
                 teams.forEach(team => {
-                    // Check if team is full to change color to red
-                    const capacityColor = team.member_count >= 4 ? "#ff5555" : "#4CAF50";
+                    const isFull = team.member_count >= 4;
+                    const capacityColor = isFull ? "#ff5555" : "#4CAF50";
+                    
+                    // Pass the actual code into the button securely behind the scenes
+                    const joinButtonHtml = isFull 
+                        ? `<div style="font-size: 11px; color: #ff5555; font-weight: bold;">[ LOCKED ]</div>` 
+                        : `<button class="join-btn" onclick="joinTeam(${team.id}, ${team.member_count}, '${team.invite_code}')">JOIN TEAM</button>`;
                     
                     const card = document.createElement("div");
                     card.className = "team-card";
                     card.innerHTML = `
-                        <div class="team-name">${team.team_name}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="team-name">${team.team_name}</div>
+                            ${joinButtonHtml}
+                        </div>
                         <div class="team-focus">FOCUS: ${team.focus_area}</div>
                         <div class="team-footer">
                             <div class="team-lead">LEAD: ${team.lead_codename}</div>
@@ -153,4 +198,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    
