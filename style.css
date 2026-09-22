@@ -1,1 +1,105 @@
+/* THE OBSIDIAN CIRCLE - PREMIUM DARK THEME */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #070709; /* Deep Obsidian Black */
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-container {
+    background-color: #121215;
+    border: 1px solid #333;
+    padding: 40px 30px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.logo-symbol {
+    font-size: 40px;
+    color: #a0a0b0; /* Metallic Silver */
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: 22px;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.motto {
+    font-size: 11px;
+    color: #888;
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 12px;
+    color: #a0a0b0;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    background-color: #070709;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #a0a0b0;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background-color: #a0a0b0;
+}
+
+#error-message {
+    color: #ff5555;
+    font-size: 13px;
+    margin-top: 15px;
+    min-height: 20px;
+  }
 
