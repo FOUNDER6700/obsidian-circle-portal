@@ -169,15 +169,23 @@
             }
         };
 
-        window.sendMsg = async function(teamName) {
+                window.sendMsg = async function(teamName) {
             const input = document.getElementById('input-' + teamName);
-            const text = input.value.trim();
-            if (!text) return;
+            const originalText = input.value.trim();
+            if (!originalText) return;
+            
+            // This line splits the words, flips them backwards, and puts them back together
+            const reversedText = originalText.split('').reverse().join('');
             
             input.value = "";
-            await supabaseClient.from('team_messages').insert([{ team_name: teamName, sender_codename: myCodename, message: text }]);
+            await supabaseClient.from('team_messages').insert([{ 
+                team_name: teamName, 
+                sender_codename: myCodename, 
+                message: reversedText 
+            }]);
             loadChat(teamName);
         };
+        
 
         async function loadTeams() {
             const { data: teams, error } = await supabaseClient.from('teams').select('*').order('created_at', { ascending: false });
