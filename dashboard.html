@@ -99,25 +99,25 @@
 
         <button class="logout-btn" id="logout-btn">SECURE LOGOUT</button>
     </div>
-
     <script>
         const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Use window.supabase and name it supabaseClient
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         document.addEventListener("DOMContentLoaded", async () => {
             
             // 1. Verify the user is actually logged in
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             
             if (!session) {
-                // If they are not logged in, kick them back to index.html immediately
                 window.location.replace("index.html");
                 return;
             }
 
             // 2. Fetch their Rank and Codename from the secure database
-            const { data: profile, error } = await supabase
+            const { data: profile, error } = await supabaseClient
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
@@ -140,41 +140,33 @@
             // 5. LOGIC: Show buttons based on Rank
             const rank = profile.rank;
             
-            // INITIATE gets these basic tools
             document.getElementById("btn-directory").style.display = "block";
             document.getElementById("btn-announcements").style.display = "block";
             document.getElementById("btn-meetings").style.display = "block";
 
-            // MEMBER and above
             if (rank.includes("MEMBER") || rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
                 document.getElementById("btn-member-chat").style.display = "block";
             }
-            
-            // SPECIALIST and above
             if (rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
                 document.getElementById("btn-specialist-chat").style.display = "block";
                 document.getElementById("btn-project-chat").style.display = "block";
                 document.getElementById("btn-projects").style.display = "block";
                 document.getElementById("btn-teams").style.display = "block";
             }
-
-            // COUNCIL and above
             if (rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
                 document.getElementById("btn-council-chat").style.display = "block";
             }
-
-            // FOUNDER strictly
             if (rank.includes("FOUNDER")) {
                 document.getElementById("btn-admin").style.display = "block";
             }
 
-            // 6. SECURE LOGOUT (Destroys the session token)
+            // 6. SECURE LOGOUT
             document.getElementById("logout-btn").addEventListener("click", async () => {
-                await supabase.auth.signOut();
+                await supabaseClient.auth.signOut();
                 window.location.replace("index.html");
             });
         });
-    </script>
+    </script>                   
 </body>
   </html>
 
