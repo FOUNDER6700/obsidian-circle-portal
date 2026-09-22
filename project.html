@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Active Projects | The Obsidian Circle</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .projects-container {
+            width: 100%; max-width: 600px; margin: 0 auto;
+            background-color: #121215; padding: 30px 20px;
+            border-radius: 8px; border: 1px solid #333;
+        }
+        .header-title {
+            text-align: center; margin-bottom: 20px; font-size: 18px;
+            letter-spacing: 3px; color: #a0a0b0;
+        }
+        .project-count {
+            color: #fff; font-weight: bold;
+        }
+        .project-card {
+            background-color: #070709; border: 1px solid #444; border-left: 4px solid #a0a0b0;
+            padding: 15px; margin-bottom: 15px; border-radius: 4px;
+        }
+        .project-title { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 1px; margin-bottom: 8px; }
+        .project-desc { font-size: 13px; color: #aaa; margin-bottom: 10px; line-height: 1.4; }
+        .project-meta { font-size: 11px; color: #666; letter-spacing: 1px; display: flex; justify-content: space-between;}
+        .status-badge { color: #ffb86c; font-weight: bold; }
+        .back-btn {
+            background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
+            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="projects-container" id="main-box" style="display: none;">
+        <div class="header-title">◎ ACTIVE PROJECTS [ <span class="project-count" id="count-display">-</span> ]</div>
+        
+        <div id="projects-list">
+            <div style="text-align: center; color: #888; font-size: 12px;">DECRYPTING FILES...</div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.replace("index.html"); return; }
+
+            document.getElementById("main-box").style.display = "block";
+
+            // Fetch projects securely
+            const { data: projects, error } = await supabaseClient
+                .from('projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            const listContainer = document.getElementById("projects-list");
+            const countDisplay = document.getElementById("count-display");
+            
+            if (error) {
+                countDisplay.textContent = "ERR";
+                listContainer.innerHTML = `<div style="color:red; text-align:center;">Clearance Denied.</div>`;
+                return;
+            }
+
+            // Update the zero / count display
+            countDisplay.textContent = projects.length;
+            listContainer.innerHTML = ""; 
+
+            if (projects.length === 0) {
+                listContainer.innerHTML = `<div style="text-align:center; color:#888;">0 ACTIVE PROJECTS PRESENT.</div>`;
+            } else {
+                projects.forEach(proj => {
+                    const card = document.createElement("div");
+                    card.className = "project-card";
+                    card.innerHTML = `
+                        <div class="project-title">${proj.title}</div>
+                        <div class="project-desc">${proj.description}</div>
+                        <div class="project-meta">
+                            <span>TEAM: ${proj.assigned_team}</span>
+                            <span class="status-badge">${proj.status}</span>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
