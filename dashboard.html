@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard | The Obsidian Circle</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Load Supabase securely -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .dashboard-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #121215;
+            padding: 30px 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .header-info {
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .user-detail {
+            color: #a0a0b0;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .menu-btn {
+            background-color: #070709;
+            border: 1px solid #444;
+            padding: 15px 10px;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none; /* Hidden by default for security */
+        }
+        .menu-btn:active {
+            background-color: #a0a0b0;
+            color: #000;
+        }
+        .admin-btn {
+            border-color: #a0a0b0;
+            color: #a0a0b0;
+        }
+        .logout-btn {
+            background-color: #121215;
+            border: 1px solid #ff5555;
+            color: #ff5555;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- This hides the dashboard until the security check passes -->
+    <div class="dashboard-container" id="main-dash" style="display: none;">
+        
+        <div class="header-info">
+            <div class="logo-symbol">◎</div>
+            <h1 id="welcome-name">WELCOME, [CODENAME]</h1>
+            <div class="user-detail" id="user-rank">Rank: [RANK]</div>
+            <div class="user-detail" id="user-id">Member ID: [ID]</div>
+            <div class="user-detail" id="user-status">Status: [STATUS]</div>
+        </div>
+
+        <h3 style="font-size: 14px; letter-spacing: 2px; margin-bottom: 15px;">PORTAL ACCESS</h3>
+        
+        <div class="menu-grid">
+            <!-- Everyone -->
+            <div class="menu-btn" id="btn-directory">MEMBER DIRECTORY</div>
+            <div class="menu-btn" id="btn-announcements">ANNOUNCEMENTS</div>
+            <div class="menu-btn" id="btn-meetings">MEETINGS</div>
+            
+            <!-- Chats -->
+            <div class="menu-btn" id="btn-member-chat">MEMBER CHAT</div>
+            <div class="menu-btn" id="btn-specialist-chat">SPECIALIST CHAT</div>
+            <div class="menu-btn" id="btn-project-chat">PROJECT CHAT</div>
+            <div class="menu-btn" id="btn-council-chat">COUNCIL CHAT</div>
+            
+            <!-- Work -->
+            <div class="menu-btn" id="btn-projects">PROJECTS</div>
+            <div class="menu-btn" id="btn-teams">TEAMS</div>
+            
+            <!-- Admin -->
+            <div class="menu-btn admin-btn" id="btn-admin">◎ ADMIN PANEL</div>
+        </div>
+
+        <button class="logout-btn" id="logout-btn">SECURE LOGOUT</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            
+            // 1. Verify the user is actually logged in
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                // If they are not logged in, kick them back to index.html immediately
+                window.location.replace("index.html");
+                return;
+            }
+
+            // 2. Fetch their Rank and Codename from the secure database
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (error || !profile) {
+                alert("Database error: Could not verify rank.");
+                return;
+            }
+
+            // 3. Inject their details into the screen
+            document.getElementById("welcome-name").textContent = `WELCOME, ${profile.codename}`;
+            document.getElementById("user-rank").textContent = `Rank: ${profile.rank}`;
+            document.getElementById("user-id").textContent = `Member ID: ${profile.member_id}`;
+            document.getElementById("user-status").textContent = `Status: ${profile.status}`;
+            
+            // 4. Reveal the dashboard
+            document.getElementById("main-dash").style.display = "block";
+
+            // 5. LOGIC: Show buttons based on Rank
+            const rank = profile.rank;
+            
+            // INITIATE gets these basic tools
+            document.getElementById("btn-directory").style.display = "block";
+            document.getElementById("btn-announcements").style.display = "block";
+            document.getElementById("btn-meetings").style.display = "block";
+
+            // MEMBER and above
+            if (rank.includes("MEMBER") || rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
+                document.getElementById("btn-member-chat").style.display = "block";
+            }
+            
+            // SPECIALIST and above
+            if (rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
+                document.getElementById("btn-specialist-chat").style.display = "block";
+                document.getElementById("btn-project-chat").style.display = "block";
+                document.getElementById("btn-projects").style.display = "block";
+                document.getElementById("btn-teams").style.display = "block";
+            }
+
+            // COUNCIL and above
+            if (rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
+                document.getElementById("btn-council-chat").style.display = "block";
+            }
+
+            // FOUNDER strictly
+            if (rank.includes("FOUNDER")) {
+                document.getElementById("btn-admin").style.display = "block";
+            }
+
+            // 6. SECURE LOGOUT (Destroys the session token)
+            document.getElementById("logout-btn").addEventListener("click", async () => {
+                await supabase.auth.signOut();
+                window.location.replace("index.html");
+            });
+        });
+    </script>
+</body>
+  </html>
 
