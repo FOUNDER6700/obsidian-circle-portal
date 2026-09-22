@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel | The Obsidian Circle</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: monospace; margin: 0; padding: 20px; }
+        .admin-container {
+            width: 100%; max-width: 600px; margin: 0 auto;
+            background-color: #121215; padding: 30px 20px;
+            border-radius: 8px; border: 1px solid #ff5555;
+        }
+        .header-title {
+            text-align: center; margin-bottom: 20px; font-size: 18px;
+            letter-spacing: 3px; color: #ff5555; font-weight: bold;
+        }
+        
+        .create-box {
+            background-color: #070709; border: 1px solid #333; padding: 15px;
+            border-radius: 4px; margin-bottom: 25px;
+        }
+        .create-title { font-size: 12px; color: #ff5555; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+        input[type="text"] {
+            width: 100%; padding: 12px; margin-bottom: 10px; background-color: #121215; 
+            border: 1px solid #444; color: #fff; border-radius: 4px; font-family: monospace; box-sizing: border-box;
+        }
+        .action-btn {
+            background-color: #ff5555; color: #fff; border: none; width: 100%;
+            padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 1px; cursor: pointer;
+        }
+        
+        .back-btn {
+            background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
+            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="admin-container" id="main-box" style="display: none;">
+        <div class="header-title">◎ FOUNDER COMMAND ◎</div>
+        
+        <div class="create-box">
+            <div class="create-title">+ OVERRIDE: DEPLOY PROJECT</div>
+            <input type="text" id="input-proj-name" placeholder="PROJECT NAME (e.g. PROJECT OMEGA)" autocomplete="off">
+            <input type="text" id="input-proj-desc" placeholder="OBJECTIVE / DESCRIPTION" autocomplete="off">
+            <button class="action-btn" id="btn-deploy-proj">INITIATE DEPLOYMENT</button>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.replace("index.html"); return; }
+
+            // 1. Verify Founder or Council Clearance
+            const { data: profile } = await supabaseClient.from('profiles').select('rank').eq('id', session.user.id).single();
+            
+            if (!profile || (profile.rank !== 'FOUNDER' && profile.rank !== 'COUNCIL')) {
+                document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">SECURITY ALERT: CLEARANCE DENIED</h2>`;
+                setTimeout(() => window.location.replace("dashboard.html"), 2000);
+                return;
+            }
+
+            // 2. Clearance granted, show panel
+            document.getElementById("main-box").style.display = "block";
+
+            // 3. Handle Project Deployment
+            document.getElementById("btn-deploy-proj").addEventListener("click", async () => {
+                const pName = document.getElementById("input-proj-name").value.trim().toUpperCase();
+                const pDesc = document.getElementById("input-proj-desc").value.trim();
+
+                if (!pName || !pDesc) {
+                    alert("Please provide both a Name and Description.");
+                    return;
+                }
+
+                // Insert into your existing projects table
+                const { error } = await supabaseClient.from('projects').insert([
+                    { title: pName, description: pDesc }
+                ]);
+
+                if (error) {
+                    alert("ERROR: Database rejected the deployment.");
+                } else {
+                    alert("PROJECT DEPLOYED SECURELY.");
+                    document.getElementById("input-proj-name").value = "";
+                    document.getElementById("input-proj-desc").value = "";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
