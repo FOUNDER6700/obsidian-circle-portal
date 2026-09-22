@@ -17,13 +17,31 @@
             letter-spacing: 3px; color: #a0a0b0;
         }
         .team-count { color: #fff; font-weight: bold; }
+        
+        .create-box {
+            background-color: #070709; border: 1px solid #333; padding: 15px;
+            border-radius: 4px; margin-bottom: 25px;
+        }
+        .create-title { font-size: 12px; color: #a0a0b0; letter-spacing: 2px; margin-bottom: 10px; font-weight: bold; }
+        input[type="text"] {
+            width: 100%; padding: 12px; margin-bottom: 10px; background-color: #121215; 
+            border: 1px solid #444; color: #fff; border-radius: 4px; font-family: monospace; box-sizing: border-box;
+        }
+        .action-btn {
+            background-color: #4CAF50; color: #fff; border: none; width: 100%;
+            padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 1px; cursor: pointer;
+        }
+
         .team-card {
             background-color: #070709; border: 1px solid #444; border-left: 4px solid #6c757d;
             padding: 15px; margin-bottom: 15px; border-radius: 4px;
         }
         .team-name { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 1px; margin-bottom: 8px; }
         .team-focus { font-size: 13px; color: #aaa; margin-bottom: 10px; line-height: 1.4; }
+        .team-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .team-lead { font-size: 11px; color: #666; letter-spacing: 1px; }
+        .capacity-meter { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+        
         .back-btn {
             background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
             padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
@@ -35,6 +53,13 @@
     <div class="teams-container" id="main-box" style="display: none;">
         <div class="header-title">◎ ACTIVE TEAMS [ <span class="team-count" id="count-display">-</span> ]</div>
         
+        <div class="create-box">
+            <div class="create-title">+ DEPLOY NEW TEAM</div>
+            <input type="text" id="input-team-name" placeholder="TEAM NAME (e.g. OMEGA TEAM)" autocomplete="off">
+            <input type="text" id="input-team-focus" placeholder="PRIMARY FOCUS AREA" autocomplete="off">
+            <button class="action-btn" id="btn-create">AUTHORIZE DEPLOYMENT</button>
+        </div>
+
         <div id="teams-list">
             <div style="text-align: center; color: #888; font-size: 12px;">DECRYPTING ROSTERS...</div>
         </div>
@@ -47,12 +72,47 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let myCodename = "UNKNOWN";
+
         document.addEventListener("DOMContentLoaded", async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { window.location.replace("index.html"); return; }
 
             document.getElementById("main-box").style.display = "block";
 
+            const { data: profile } = await supabaseClient.from('profiles').select('codename').eq('id', session.user.id).single();
+            if (profile) myCodename = profile.codename;
+
+            loadTeams();
+
+            document.getElementById("btn-create").addEventListener("click", async () => {
+                const nameInput = document.getElementById("input-team-name");
+                const focusInput = document.getElementById("input-team-focus");
+                
+                const tName = nameInput.value.trim().toUpperCase();
+                const tFocus = focusInput.value.trim();
+
+                if (!tName || !tFocus) {
+                    alert("Please provide both a Team Name and a Focus Area.");
+                    return;
+                }
+
+                // Member count defaults to 1 securely on the backend
+                const { error } = await supabaseClient.from('teams').insert([
+                    { team_name: tName, focus_area: tFocus, lead_codename: myCodename }
+                ]);
+
+                if (error) {
+                    alert("DEPLOYMENT REJECTED: You do not have clearance.");
+                } else {
+                    nameInput.value = "";
+                    focusInput.value = "";
+                    loadTeams();
+                }
+            });
+        });
+
+        async function loadTeams() {
             const { data: teams, error } = await supabaseClient
                 .from('teams')
                 .select('*')
@@ -74,18 +134,23 @@
                 listContainer.innerHTML = `<div style="text-align:center; color:#888;">0 ACTIVE TEAMS PRESENT.</div>`;
             } else {
                 teams.forEach(team => {
+                    // Check if team is full to change color to red
+                    const capacityColor = team.member_count >= 4 ? "#ff5555" : "#4CAF50";
+                    
                     const card = document.createElement("div");
                     card.className = "team-card";
                     card.innerHTML = `
                         <div class="team-name">${team.team_name}</div>
                         <div class="team-focus">FOCUS: ${team.focus_area}</div>
-                        <div class="team-lead">LEAD: ${team.lead_codename}</div>
+                        <div class="team-footer">
+                            <div class="team-lead">LEAD: ${team.lead_codename}</div>
+                            <div class="capacity-meter" style="color: ${capacityColor};">CAPACITY: ${team.member_count} / 4</div>
+                        </div>
                     `;
                     listContainer.appendChild(card);
                 });
             }
-        });
+        }
     </script>
 </body>
-  </html>
-  
+</html>
