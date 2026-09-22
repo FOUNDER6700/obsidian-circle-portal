@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Comms | The Obsidian Circle</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        .chat-container {
+            flex: 1; display: flex; flex-direction: column;
+            width: 100%; max-width: 600px; margin: 0 auto;
+            background-color: #121215; border: 1px solid #333;
+        }
+        .chat-header {
+            padding: 15px; border-bottom: 1px solid #333; text-align: center;
+            font-size: 16px; font-weight: bold; letter-spacing: 2px; color: #a0a0b0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .back-btn { background: none; border: 1px solid #444; color: #fff; padding: 5px 10px; cursor: pointer; }
+        .messages-area {
+            flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+        }
+        .message {
+            max-width: 80%; padding: 10px; border-radius: 4px; font-size: 14px; line-height: 1.4;
+        }
+        .msg-other { background-color: #1e1e24; border: 1px solid #333; align-self: flex-start; }
+        .msg-mine { background-color: #2a2a35; border: 1px solid #555; align-self: flex-end; color: #fff; }
+        .msg-name { font-size: 10px; color: #888; margin-bottom: 4px; letter-spacing: 1px; }
+        .input-area {
+            padding: 15px; border-top: 1px solid #333; display: flex; gap: 10px; background-color: #070709;
+        }
+        input[type="text"] {
+            flex: 1; padding: 12px; background-color: #121215; border: 1px solid #444;
+            color: #fff; border-radius: 4px; font-family: monospace;
+        }
+        .send-btn {
+            background-color: #a0a0b0; color: #000; border: none; padding: 0 20px;
+            font-weight: bold; cursor: pointer; border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">◄ BACK</button>
+            <span id="room-name">ENCRYPTED CHANNEL</span>
+            <div style="width: 60px;"></div> <!-- Spacer for centering -->
+        </div>
+        
+        <div class="messages-area" id="messages-box">
+            <div style="text-align: center; color: #555; font-size: 12px; margin-top: 20px;">CONNECTING TO SECURE NODE...</div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Transmit message..." autocomplete="off">
+            <button class="send-btn" id="send-btn">SEND</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let myUserId = null;
+        let myCodename = null;
+        
+        // Find out which room they clicked from the URL (e.g., chat.html?room=MEMBER)
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeRoom = urlParams.get('room') || 'MEMBER';
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            document.getElementById("room-name").textContent = `${activeRoom} CHANNEL`;
+
+            // 1. Verify Login
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.replace("index.html"); return; }
+            myUserId = session.user.id;
+
+            // 2. Get Codename for sending messages
+            const { data: profile } = await supabaseClient.from('profiles').select('codename').eq('id', myUserId).single();
+            if (profile) myCodename = profile.codename;
+
+            // 3. Start Loading Messages
+            loadMessages();
+            // Refresh messages every 3 seconds for a "live" feel
+            setInterval(loadMessages, 3000);
+
+            // 4. Handle Sending
+            const sendBtn = document.getElementById("send-btn");
+            const msgInput = document.getElementById("msg-input");
+
+            const sendMessage = async () => {
+                const text = msgInput.value.trim();
+                if (!text || !myCodename) return;
+                
+                msgInput.value = ""; // Clear box
+                
+                const { error } = await supabaseClient.from('messages').insert([
+                    { user_id: myUserId, codename: myCodename, room: activeRoom, content: text }
+                ]);
+
+                if (error) {
+                    alert("Transmission Failed. You may not have clearance for this channel.");
+                } else {
+                    loadMessages(); // Instantly reload
+                }
+            };
+
+            sendBtn.addEventListener("click", sendMessage);
+            msgInput.addEventListener("keypress", (e) => { if (e.key === 'Enter') sendMessage(); });
+        });
+
+        async function loadMessages() {
+            const { data: messages, error } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('room', activeRoom)
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+            if (error) return; // Silent fail on polling
+
+            const box = document.getElementById("messages-box");
+            
+            // Only update if we have messages to prevent clearing the connecting text instantly
+            if (messages) {
+                box.innerHTML = "";
+                messages.forEach(msg => {
+                    const isMine = msg.user_id === myUserId;
+                    const div = document.createElement("div");
+                    div.className = `message ${isMine ? 'msg-mine' : 'msg-other'}`;
+                    div.innerHTML = `<div class="msg-name">${msg.codename}</div><div>${msg.content}</div>`;
+                    box.appendChild(div);
+                });
+                // Auto-scroll to bottom
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
