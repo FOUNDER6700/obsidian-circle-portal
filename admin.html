@@ -11,41 +11,25 @@
             background-color: #121215; padding: 30px 20px;
             border-radius: 8px; border: 1px solid #ff5555;
         }
-        .header-title {
-            text-align: center; margin-bottom: 20px; font-size: 18px;
-            letter-spacing: 3px; color: #ff5555; font-weight: bold;
-        }
+        .header-title { text-align: center; margin-bottom: 20px; font-size: 18px; letter-spacing: 3px; color: #ff5555; font-weight: bold; }
         
-        .create-box {
-            background-color: #070709; border: 1px solid #333; padding: 15px;
-            border-radius: 4px; margin-bottom: 25px;
-        }
+        .create-box { background-color: #070709; border: 1px solid #333; padding: 15px; border-radius: 4px; margin-bottom: 25px; }
         .create-title { font-size: 12px; color: #ff5555; letter-spacing: 2px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 10px;}
         
-        input[type="text"] {
+        input[type="text"], textarea {
             width: 100%; padding: 12px; margin-bottom: 10px; background-color: #121215; 
             border: 1px solid #444; color: #fff; border-radius: 4px; font-family: monospace; box-sizing: border-box;
         }
-        .action-btn {
-            background-color: #ff5555; color: #fff; border: none; width: 100%;
-            padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 1px; cursor: pointer;
-        }
+        textarea { resize: vertical; min-height: 80px; }
+        .action-btn { background-color: #ff5555; color: #fff; border: none; width: 100%; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 1px; cursor: pointer; }
         
-        /* User Roster Styles */
-        .user-row {
-            display: flex; justify-content: space-between; align-items: center;
-            background-color: #121215; padding: 10px; margin-bottom: 8px;
-            border: 1px solid #333; border-radius: 4px;
-        }
+        .user-row { display: flex; justify-content: space-between; align-items: center; background-color: #121215; padding: 10px; margin-bottom: 8px; border: 1px solid #333; border-radius: 4px; }
         .user-name { font-weight: bold; font-size: 14px; color: #fff; }
         .user-controls { display: flex; gap: 5px; }
         .rank-select { background: #000; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 3px; font-size: 11px; font-family: monospace; }
         .set-btn { background: #ff5555; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
-        .back-btn {
-            background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%;
-            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
-        }
+        .back-btn { background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%; padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -54,6 +38,14 @@
     <div class="admin-container" id="main-box" style="display: none;">
         <div class="header-title">◎ FOUNDER COMMAND ◎</div>
         
+        <!-- Announcements Panel -->
+        <div class="create-box">
+            <div class="create-title">+ OVERRIDE: BROADCAST ANNOUNCEMENT</div>
+            <input type="text" id="input-ann-title" placeholder="TRANSMISSION TITLE" autocomplete="off">
+            <textarea id="input-ann-body" placeholder="ENTER MESSAGE PAYLOAD..."></textarea>
+            <button class="action-btn" id="btn-deploy-ann">AUTHORIZE BROADCAST</button>
+        </div>
+
         <!-- Project Deployment Panel -->
         <div class="create-box">
             <div class="create-title">+ OVERRIDE: DEPLOY PROJECT</div>
@@ -65,9 +57,7 @@
         <!-- Personnel Override Panel -->
         <div class="create-box">
             <div class="create-title">◎ PERSONNEL CLEARANCE OVERRIDE</div>
-            <div id="roster-list">
-                <div style="color: #888; font-size: 12px; text-align: center;">DECRYPTING ROSTER...</div>
-            </div>
+            <div id="roster-list"><div style="color: #888; font-size: 12px; text-align: center;">DECRYPTING ROSTER...</div></div>
         </div>
 
         <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
@@ -78,11 +68,13 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let myCodename = "COMMAND";
+
         document.addEventListener("DOMContentLoaded", async () => {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) { window.location.replace("index.html"); return; }
 
-            const { data: profile } = await supabaseClient.from('profiles').select('rank').eq('id', session.user.id).single();
+            const { data: profile } = await supabaseClient.from('profiles').select('rank, codename').eq('id', session.user.id).single();
             
             if (!profile || (profile.rank !== 'FOUNDER' && profile.rank !== 'COUNCIL')) {
                 document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">SECURITY ALERT: CLEARANCE DENIED</h2>`;
@@ -90,10 +82,27 @@
                 return;
             }
 
+            myCodename = profile.codename;
             document.getElementById("main-box").style.display = "block";
-            
             loadRoster();
 
+            // Handle Announcements
+            document.getElementById("btn-deploy-ann").addEventListener("click", async () => {
+                const aTitle = document.getElementById("input-ann-title").value.trim().toUpperCase();
+                const aBody = document.getElementById("input-ann-body").value.trim();
+
+                if (!aTitle || !aBody) { alert("Please provide both Title and Message."); return; }
+
+                const { error } = await supabaseClient.from('announcements').insert([{ title: aTitle, content: aBody, author_codename: myCodename }]);
+                if (error) { alert("ERROR: Database rejected the broadcast."); } 
+                else {
+                    alert("BROADCAST SUCCESSFUL.");
+                    document.getElementById("input-ann-title").value = "";
+                    document.getElementById("input-ann-body").value = "";
+                }
+            });
+
+            // Handle Projects
             document.getElementById("btn-deploy-proj").addEventListener("click", async () => {
                 const pName = document.getElementById("input-proj-name").value.trim().toUpperCase();
                 const pDesc = document.getElementById("input-proj-desc").value.trim();
@@ -110,18 +119,15 @@
             });
         });
 
-        // Load all users from the database
         async function loadRoster() {
             const { data: users, error } = await supabaseClient.from('profiles').select('id, codename, rank').order('created_at');
             const rosterContainer = document.getElementById("roster-list");
-            
             if (error) { rosterContainer.innerHTML = "<div style='color:red; text-align:center;'>Error loading roster.</div>"; return; }
 
             rosterContainer.innerHTML = "";
             users.forEach(user => {
                 const userRow = document.createElement("div");
                 userRow.className = "user-row";
-                
                 userRow.innerHTML = `
                     <div class="user-name">${user.codename}</div>
                     <div class="user-controls">
@@ -138,17 +144,11 @@
             });
         }
 
-        // Apply rank override to the database
         window.updateRank = async function(userId) {
             const newRank = document.getElementById('rank-' + userId).value;
             const { error } = await supabaseClient.from('profiles').update({ rank: newRank }).eq('id', userId);
-            
-            if (error) {
-                alert("OVERRIDE FAILED: System rejected clearance update.");
-            } else {
-                alert("CLEARANCE UPDATED.");
-                loadRoster();
-            }
+            if (error) alert("OVERRIDE FAILED: System rejected clearance update.");
+            else { alert("CLEARANCE UPDATED."); loadRoster(); }
         };
     </script>
 </body>
