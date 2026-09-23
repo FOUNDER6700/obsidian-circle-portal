@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Announcements | The Obsidian Circle</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: monospace; margin: 0; padding: 20px; }
+        .ann-container {
+            width: 100%; max-width: 600px; margin: 0 auto;
+            background-color: #121215; padding: 30px 20px;
+            border-radius: 8px; border: 1px solid #333;
+        }
+        .header-title { text-align: center; margin-bottom: 20px; font-size: 18px; letter-spacing: 3px; color: #a0a0b0; }
+        
+        .ann-card { background-color: #070709; border: 1px solid #444; border-left: 4px solid #fff; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .ann-title { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 1px; margin-bottom: 10px; }
+        .ann-body { font-size: 13px; color: #ccc; margin-bottom: 15px; line-height: 1.5; white-space: pre-wrap; }
+        .ann-footer { font-size: 11px; color: #666; letter-spacing: 1px; text-transform: uppercase; border-top: 1px solid #222; padding-top: 10px; }
+
+        .back-btn { background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%; padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="ann-container">
+        <div class="header-title">◎ OFFICIAL DIRECTIVES ◎</div>
+        
+        <div id="ann-list">
+            <div style="text-align: center; color: #888; font-size: 12px;">DECRYPTING TRANSMISSIONS...</div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.replace("index.html"); return; }
+            loadAnnouncements();
+        });
+
+        async function loadAnnouncements() {
+            const { data: announcements, error } = await supabaseClient.from('announcements').select('*').order('created_at', { ascending: false });
+            const listContainer = document.getElementById("ann-list");
+            
+            if (error) { listContainer.innerHTML = `<div style="color:red; text-align:center;">Clearance Denied.</div>`; return; }
+            listContainer.innerHTML = ""; 
+
+            if (announcements.length === 0) { listContainer.innerHTML = `<div style="text-align:center; color:#888;">NO ACTIVE TRANSMISSIONS.</div>`; return; }
+
+            announcements.forEach(ann => {
+                const dateObj = new Date(ann.created_at);
+                const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                const card = document.createElement("div");
+                card.className = "ann-card";
+                card.innerHTML = `
+                    <div class="ann-title">${ann.title}</div>
+                    <div class="ann-body">${ann.content}</div>
+                    <div class="ann-footer">ISSUED BY: ${ann.author_codename} // ${dateStr}</div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
