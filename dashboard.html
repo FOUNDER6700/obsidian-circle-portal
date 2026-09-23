@@ -4,169 +4,202 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard | The Obsidian Circle</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Load Supabase securely -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
+        body {
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
         .dashboard-container {
             width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #121215;
-            padding: 30px 20px;
+            max-width: 480px;
+            background-color: #0c0c0e;
+            border: 1px solid #222;
             border-radius: 8px;
-            border: 1px solid #333;
+            padding: 28px 20px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
         }
-        .header-info {
-            border-bottom: 1px solid #333;
-            padding-bottom: 20px;
+        .header-title {
+            text-align: center;
+            font-size: 17px;
+            letter-spacing: 3px;
+            color: #e0e0e0;
+            font-weight: bold;
             margin-bottom: 20px;
         }
-        .user-detail {
-            color: #a0a0b0;
+        .profile-card {
+            background-color: #121216;
+            border: 1px solid #26262b;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
             font-size: 13px;
-            letter-spacing: 1px;
-            margin-top: 5px;
-            text-transform: uppercase;
+        }
+        .profile-row:last-child { margin-bottom: 0; }
+        .label { color: #777; letter-spacing: 1px; }
+        .val-codename { color: #fff; font-weight: bold; letter-spacing: 1px; }
+        .badge-rank {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            border: 1px solid #444;
+            background: #000;
         }
         .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
         }
         .menu-btn {
-            background-color: #070709;
-            border: 1px solid #444;
-            padding: 15px 10px;
-            color: #fff;
+            background-color: #121216;
+            color: #dedede;
+            border: 1px solid #2b2b32;
+            padding: 14px;
+            border-radius: 5px;
             text-align: center;
-            border-radius: 4px;
             font-size: 13px;
             font-weight: bold;
+            letter-spacing: 2px;
             cursor: pointer;
-            display: none; /* Hidden by default for security */
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
         }
-        .menu-btn:active {
-            background-color: #a0a0b0;
-            color: #000;
+        .menu-btn:hover {
+            border-color: #666;
+            background-color: #18181f;
+            color: #fff;
         }
         .admin-btn {
-            border-color: #a0a0b0;
-            color: #a0a0b0;
+            border-color: #ff4d4d !important;
+            color: #ff4d4d !important;
+            background-color: rgba(255, 77, 77, 0.05);
+        }
+        .admin-btn:hover {
+            background-color: rgba(255, 77, 77, 0.15) !important;
+        }
+        .council-btn {
+            border-color: #9d4edd !important;
+            color: #c77dff !important;
+            background-color: rgba(157, 78, 221, 0.05);
+        }
+        .council-btn:hover {
+            background-color: rgba(157, 78, 221, 0.15) !important;
         }
         .logout-btn {
-            background-color: #121215;
-            border: 1px solid #ff5555;
-            color: #ff5555;
-            margin-top: 30px;
+            width: 100%;
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #222;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            color: #ff4d4d;
+            border-color: #442222;
         }
     </style>
 </head>
 <body>
 
-    <!-- This hides the dashboard until the security check passes -->
-    <div class="dashboard-container" id="main-dash" style="display: none;">
-        
-        <div class="header-info">
-            <div class="logo-symbol">◎</div>
-            <h1 id="welcome-name">WELCOME, [CODENAME]</h1>
-            <div class="user-detail" id="user-rank">Rank: [RANK]</div>
-            <div class="user-detail" id="user-id">Member ID: [ID]</div>
-            <div class="user-detail" id="user-status">Status: [STATUS]</div>
+    <div class="dashboard-container" id="dashboard-box" style="display: none;">
+        <div class="header-title">THE OBSIDIAN CIRCLE</div>
+
+        <div class="profile-card">
+            <div class="profile-row">
+                <span class="label">CODENAME</span>
+                <span class="val-codename" id="user-codename">AUTHENTICATING...</span>
+            </div>
+            <div class="profile-row">
+                <span class="label">CLEARANCE</span>
+                <span class="badge-rank" id="user-rank">VERIFYING</span>
+            </div>
         </div>
 
-        <h3 style="font-size: 14px; letter-spacing: 2px; margin-bottom: 15px;">PORTAL ACCESS</h3>
-        
         <div class="menu-grid">
-            <!-- Everyone -->
-            <div class="menu-btn" id="btn-directory" onclick="window.location.href='directory.html'">MEMBER DIRECTORY</div>
-            <div class="menu-btn" id="btn-announcements" onclick="window.location.href='announcements.html'">ANNOUNCEMENTS</div>
-            <div class="menu-btn" id="btn-meeting" onclick="window.location.href='meeting.html'">COUNCIL CHAMBERS</div>
-            
-            <!-- Chats -->
-            <div class="menu-btn" id="btn-member-chat" onclick="window.location.href='chat.html?room=MEMBER'">MEMBER CHAT</div>
-            <div class="menu-btn" id="btn-specialist-chat" onclick="window.location.href='chat.html?room=SPECIALIST'">SPECIALIST CHAT</div>
-            <div class="menu-btn" id="btn-project-chat" onclick="window.location.href='chat.html?room=PROJECT'">PROJECT CHAT</div>
-            <div class="menu-btn" id="btn-council-chat" onclick="window.location.href='chat.html?room=COUNCIL'">COUNCIL CHAT</div>
-            
-            <!-- Work -->
-            <div class="menu-btn" id="btn-projects" onclick="window.location.href='projects.html'">PROJECTS</div>
-            <div class="menu-btn" id="btn-teams" onclick="window.location.href='teams.html'">TEAMS</div>
-            
-            <!-- Admin -->
-            <div class="menu-btn" id="btn-admin" onclick="window.location.href='admin.html'" style="display: none; border-color: #ff5555; color: #ff5555;">[ ADMIN PANEL ]</div>
+            <div class="menu-btn" onclick="window.location.href='projects.html'">ACTIVE PROJECTS</div>
+            <div class="menu-btn" onclick="window.location.href='teams.html'">TEAMS / DIRECTORY</div>
+            <div class="menu-btn" onclick="window.location.href='announcements.html'">ANNOUNCEMENTS</div>
+            <div class="menu-btn council-btn" id="btn-meeting" onclick="window.location.href='meeting.html'" style="display: none;">COUNCIL CHAMBERS</div>
+            <div class="menu-btn admin-btn" id="btn-admin" onclick="window.location.href='admin.html'" style="display: none;">[ ADMIN PANEL ]</div>
         </div>
 
-        <button class="logout-btn" id="logout-btn">SECURE LOGOUT</button>
+        <button class="logout-btn" id="btn-logout">DISCONNECT SESSION</button>
     </div>
+
     <script>
         const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
-        
-        // Use window.supabase and name it supabaseClient
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         document.addEventListener("DOMContentLoaded", async () => {
-            
-            // 1. Verify the user is actually logged in
             const { data: { session } } = await supabaseClient.auth.getSession();
-            
             if (!session) {
                 window.location.replace("index.html");
                 return;
             }
 
-            // 2. Fetch their Rank and Codename from the secure database
             const { data: profile, error } = await supabaseClient
                 .from('profiles')
-                .select('*')
+                .select('codename, rank')
                 .eq('id', session.user.id)
                 .single();
 
             if (error || !profile) {
-                alert("Database error: Could not verify rank.");
+                alert("Security handshake failed. Logging out.");
+                await supabaseClient.auth.signOut();
+                window.location.replace("index.html");
                 return;
             }
 
-            // 3. Inject their details into the screen
-            document.getElementById("welcome-name").textContent = `WELCOME, ${profile.codename}`;
-            document.getElementById("user-rank").textContent = `Rank: ${profile.rank}`;
-            document.getElementById("user-id").textContent = `Member ID: ${profile.member_id}`;
-            document.getElementById("user-status").textContent = `Status: ${profile.status}`;
-            
-            // 4. Reveal the dashboard
-            document.getElementById("main-dash").style.display = "block";
+            const rank = (profile.rank || 'MEMBER').toUpperCase();
+            const rankBadge = document.getElementById("user-rank");
 
-            // 5. LOGIC: Show buttons based on Rank
-            const rank = profile.rank;
-            
-            document.getElementById("btn-directory").style.display = "block";
-            document.getElementById("btn-announcements").style.display = "block";
-            document.getElementById("btn-meetings").style.display = "block";
+            document.getElementById("user-codename").textContent = profile.codename || "UNKNOWN";
+            rankBadge.textContent = rank;
 
-            if (rank.includes("MEMBER") || rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
-                document.getElementById("btn-member-chat").style.display = "block";
+            if (rank === 'FOUNDER') {
+                rankBadge.style.color = '#ff4d4d';
+                rankBadge.style.borderColor = '#ff4d4d';
+            } else if (rank === 'COUNCIL') {
+                rankBadge.style.color = '#c77dff';
+                rankBadge.style.borderColor = '#c77dff';
+            } else if (rank === 'SPECIALIST') {
+                rankBadge.style.color = '#00e5ff';
+                rankBadge.style.borderColor = '#00e5ff';
+            } else {
+                rankBadge.style.color = '#888';
+                rankBadge.style.borderColor = '#444';
             }
-            if (rank.includes("SPECIALIST") || rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
-                document.getElementById("btn-specialist-chat").style.display = "block";
-                document.getElementById("btn-project-chat").style.display = "block";
-                document.getElementById("btn-projects").style.display = "block";
-                document.getElementById("btn-teams").style.display = "block";
-            }
-            if (rank.includes("COUNCIL") || rank.includes("FOUNDER")) {
-                document.getElementById("btn-council-chat").style.display = "block";
-            }
-            if (rank.includes("FOUNDER")) {
+
+            if (rank === 'FOUNDER' || rank === 'COUNCIL') {
                 document.getElementById("btn-admin").style.display = "block";
+                document.getElementById("btn-meeting").style.display = "block";
             }
 
-            // 6. SECURE LOGOUT
-            document.getElementById("logout-btn").addEventListener("click", async () => {
+            document.getElementById("dashboard-box").style.display = "block";
+
+            document.getElementById("btn-logout").addEventListener("click", async () => {
                 await supabaseClient.auth.signOut();
                 window.location.replace("index.html");
             });
         });
-    </script>                   
+    </script>
 </body>
-  </html>
-
+</html>
