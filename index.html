@@ -32,40 +32,7 @@
     </div>
 
     <!-- Load our custom engine -->
-    <script>
-    async function loginUser() {
-        let inputId = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const errorMsg = document.getElementById("error-msg");
-
-        if (!inputId || !password) {
-            errorMsg.textContent = "CREDENTIALS REQUIRED.";
-            errorMsg.style.display = "block";
-            return;
-        }
-
-        // The Bypass: Keeps the hyphen and formats it perfectly for Supabase
-        if (!inputId.includes('@')) {
-            // This converts "COUNCIL-01" directly into "council-01@obsidian.com"
-            inputId = inputId.toLowerCase() + '@obsidian.com';
-        }
-
-        document.querySelector("button").textContent = "AUTHENTICATING...";
-        
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-            email: inputId,
-            password: password
-        });
-
-        if (error) {
-            errorMsg.textContent = "ACCESS DENIED: INVALID CREDENTIALS.";
-            errorMsg.style.display = "block";
-            document.querySelector("button").textContent = "INITIATE LOGIN";
-        } else {
-            window.location.replace("dashboard.html");
-        }
-    }
-    </script>
+    <script src="aap.js"></script>
 </body>
 </html>
   
