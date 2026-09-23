@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Meeting Room | The Obsidian Circle</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .meeting-container {
+            width: 100%; max-width: 600px; margin: 0 auto;
+            background-color: #121215; padding: 20px 10px;
+            border-radius: 8px; border: 1px solid #ff5555;
+        }
+        .header-title {
+            text-align: center; margin-bottom: 20px; font-size: 18px;
+            letter-spacing: 3px; color: #ff5555; font-weight: bold;
+        }
+        
+        /* Founder Controls */
+        #founder-controls { display: none; display: flex; gap: 10px; margin-bottom: 15px; }
+        .start-btn { background-color: #4CAF50; color: #fff; border: none; flex: 1; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px;}
+        .end-btn { background-color: #ff5555; color: #fff; border: none; flex: 1; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px;}
+
+        /* Waiting Screen */
+        .waiting-screen {
+            background-color: #070709; border: 1px solid #333; padding: 40px 20px;
+            border-radius: 4px; text-align: center; margin-bottom: 15px;
+        }
+        .spinner { margin-top: 15px; color: #ff5555; font-size: 12px; font-weight: bold; letter-spacing: 2px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* Video Area */
+        .video-wrapper {
+            width: 100%; height: 500px; background-color: #000;
+            border-radius: 4px; border: 1px solid #333; overflow: hidden; margin-bottom: 15px;
+            display: none; /* Hidden by default */
+        }
+        
+        .back-btn {
+            background-color: #333; color: #fff; margin-top: 10px; border: none; width: 100%;
+            padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="meeting-container" id="main-box" style="display: none;">
+        <div class="header-title">◎ COUNCIL CHAMBERS ◎</div>
+        
+        <div id="founder-controls">
+            <button class="start-btn" onclick="setMeetingState(true)">START MEETING</button>
+            <button class="end-btn" onclick="setMeetingState(false)">END MEETING</button>
+        </div>
+
+        <div class="waiting-screen" id="waiting-box">
+            <div style="color: #ccc; font-size: 14px; line-height: 1.5;">COMM-LINK IN STANDBY MODE.<br><br>Only a Founder can initialize the secure connection.</div>
+            <div class="spinner">AWAITING HOST...</div>
+        </div>
+
+        <div class="video-wrapper" id="video-box">
+            <iframe id="jitsi-frame" src="" width="100%" height="100%" style="border: none;" allow="camera; microphone; fullscreen; display-capture"></iframe>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let myRank = "UNKNOWN";
+        let isMeetingLive = false;
+        const JITSI_URL = "https://meet.jit.si/ObsidianCircleCouncilClassified";
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) { window.location.replace("index.html"); return; }
+
+            const { data: profile } = await supabaseClient.from('profiles').select('rank').eq('id', session.user.id).single();
+            
+            if (!profile || (profile.rank !== 'FOUNDER' && profile.rank !== 'COUNCIL')) {
+                document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">SECURITY ALERT: CLEARANCE DENIED</h2>`;
+                setTimeout(() => window.location.replace("dashboard.html"), 2000);
+                return;
+            }
+
+            myRank = profile.rank;
+            document.getElementById("main-box").style.display = "block";
+            
+            if (myRank === 'FOUNDER') {
+                document.getElementById("founder-controls").style.display = "flex";
+            }
+
+            checkMeetingStatus();
+            // Check the database every 3 seconds to see if Founder started it
+            setInterval(checkMeetingStatus, 3000); 
+        });
+
+        async function checkMeetingStatus() {
+            const { data } = await supabaseClient.from('meeting_status').select('is_active').eq('id', 1).single();
+            if (data && data.is_active !== isMeetingLive) {
+                isMeetingLive = data.is_active;
+                updateUI();
+            }
+        }
+
+        window.setMeetingState = async function(state) {
+            await supabaseClient.from('meeting_status').update({ is_active: state }).eq('id', 1);
+            isMeetingLive = state;
+            updateUI();
+        };
+
+        function updateUI() {
+            const waitBox = document.getElementById("waiting-box");
+            const vidBox = document.getElementById("video-box");
+            const frame = document.getElementById("jitsi-frame");
+
+            if (isMeetingLive) {
+                waitBox.style.display = "none";
+                vidBox.style.display = "block";
+                if (!frame.src.includes(JITSI_URL)) frame.src = JITSI_URL;
+            } else {
+                vidBox.style.display = "none";
+                waitBox.style.display = "block";
+                frame.src = ""; // Cuts the camera/mic feed immediately
+            }
+        }
+    </script>
+</body>
+  </html>
+  
