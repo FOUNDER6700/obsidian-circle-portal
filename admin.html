@@ -15,13 +15,10 @@
         button { background-color: #ff4d4d; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px; width: 100%; margin-bottom: 10px; }
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
         .user-name { font-size: 14px; color: #fff; }
-        .user-controls { display: flex; gap: 10px; }
-        select { background: #000; color: #fff; border: 1px solid #555; padding: 5px; font-family: monospace; border-radius: 3px; }
-        .set-btn { padding: 5px 15px; width: auto; margin: 0; background-color: #333; color: #fff; }
+        .user-rank { font-size: 12px; color: #00e5ff; letter-spacing: 1px; }
         .back-btn { background-color: #222; color: #fff; margin-top: 15px; border: none; width: 100%; padding: 12px; border-radius: 4px; font-size: 12px; letter-spacing: 1px; cursor: pointer; }
     </style>
     <script>
-        // Hide the page immediately upon loading to prevent unauthorized flashing
         document.documentElement.style.display = 'none';
     </script>
 </head>
@@ -39,7 +36,7 @@
         </div>
 
         <div class="section">
-            <div class="section-title">PERSONNEL ROSTER</div>
+            <div class="section-title">PERSONNEL ROSTER (MANAGED IN SUPABASE)</div>
             <div id="roster-list">
                 <div style="color: #666; text-align: center; font-size: 12px;">LOADING SECURE ROSTER...</div>
             </div>
@@ -48,7 +45,6 @@
         <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
     </div>
 
-    <!-- Supabase Secure Admin Script -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
@@ -56,7 +52,6 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         document.addEventListener("DOMContentLoaded", async () => {
-            // 1. Verify Login Credentials
             const { data: { user }, error } = await supabaseClient.auth.getUser();
             
             if (error || !user) {
@@ -67,19 +62,16 @@
             const emailPrefix = user.email.split('@')[0].toUpperCase();
             const rank = emailPrefix.split('-')[0];
 
-            // 2. Strict Founder-Only Lockdown (Council is now rejected)
             if (rank !== 'FOUNDER') {
                 window.location.replace("dashboard.html");
                 return;
             }
 
-            // 3. Authorization successful: Restore Screen Visibility
             document.documentElement.style.display = 'block';
             
             const adminUI = document.getElementById("admin-ui");
             if (adminUI) adminUI.style.display = 'block';
 
-            // 4. Handle Projects logic
             const deployBtn = document.getElementById("btn-deploy-proj");
             if (deployBtn) {
                 deployBtn.addEventListener("click", async () => {
@@ -98,7 +90,6 @@
                 });
             }
 
-            // 5. Initialize Database Roster
             loadRoster();
         });
 
@@ -106,7 +97,7 @@
             const rosterContainer = document.getElementById("roster-list");
             if (!rosterContainer) return;
 
-            const { data: users, error } = await supabaseClient.from('profiles').select('id, codename, rank').order('created_at');
+            const { data: users, error } = await supabaseClient.from('profiles').select('codename, rank').order('created_at');
             if (error) { rosterContainer.innerHTML = "<div style='color:red; text-align:center;'>Error loading roster.</div>"; return; }
 
             rosterContainer.innerHTML = "";
@@ -115,26 +106,11 @@
                 userRow.className = "user-row";
                 userRow.innerHTML = `
                     <div class="user-name">${user.codename}</div>
-                    <div class="user-controls">
-                        <select id="rank-${user.id}" class="rank-select">
-                            <option value="MEMBER" ${user.rank === 'MEMBER' ? 'selected' : ''}>MEMBER</option>
-                            <option value="SPECIALIST" ${user.rank === 'SPECIALIST' ? 'selected' : ''}>SPECIALIST</option>
-                            <option value="COUNCIL" ${user.rank === 'COUNCIL' ? 'selected' : ''}>COUNCIL</option>
-                            <option value="FOUNDER" ${user.rank === 'FOUNDER' ? 'selected' : ''}>FOUNDER</option>
-                        </select>
-                        <button class="set-btn" onclick="updateRank('${user.id}')">SET</button>
-                    </div>
+                    <div class="user-rank">[ ${user.rank} ]</div>
                 `;
                 rosterContainer.appendChild(userRow);
             });
         }
-
-        window.updateRank = async function(userId) {
-            const newRank = document.getElementById('rank-' + userId).value;
-            const { error } = await supabaseClient.from('profiles').update({ rank: newRank }).eq('id', userId);
-            if (error) alert("OVERRIDE FAILED: System rejected clearance update.");
-            else { alert("CLEARANCE UPDATED."); loadRoster(); }
-        };
     </script>
 </body>
 </html>
