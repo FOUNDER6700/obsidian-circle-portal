@@ -7,30 +7,29 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Rank Specific Button Colors */
         .member-chat-btn { border-color: #555 !important; color: #aaa !important; }
         .specialist-chat-btn { border-color: rgba(0, 229, 255, 0.4) !important; color: #00e5ff !important; background-color: rgba(0, 229, 255, 0.03); }
         .council-chat-btn { border-color: rgba(199, 125, 255, 0.4) !important; color: #c77dff !important; background-color: rgba(157, 78, 221, 0.03); }
         .admin-btn { border-color: rgba(255, 77, 77, 0.4) !important; color: #ff4d4d !important; background-color: rgba(255, 77, 77, 0.03); }
         
-        .logout-btn { background-color: transparent; color: #666; border: 1px solid #222; margin-top: 10px; }
-        .logout-btn:hover { color: #ff4d4d; border-color: #ff4d4d; background-color: rgba(255, 77, 77, 0.05); }
+        .logout-btn { background-color: transparent; color: #666; border: 1px solid #222; margin-top: 10px; width: 100%; padding: 14px; border-radius: 4px; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: all 0.3s;}
+        .logout-btn:hover { color: #ff4d4d; border-color: #ff4d4d; background-color: rgba(255, 77, 77, 0.05); transform: translateY(-2px); }
+        .logout-btn:active { transform: translateY(0) scale(0.97); }
     </style>
 </head>
 <body>
 
-    <!-- Advanced UI Layers -->
     <div class="page-transition-overlay" id="transition-overlay"></div>
     <div class="cursor-dot" id="cursor-dot"></div>
     <div class="cursor-ring" id="cursor-ring"></div>
     <canvas id="particle-canvas"></canvas>
     <div class="ambient-light"></div>
 
-    <div class="dashboard-container" id="dashboard-box" style="display: none;">
+    <div class="dashboard-container" id="main-container" style="display: none;">
         <div class="header-title" id="obsidian-title">THE OBSIDIAN CIRCLE</div>
         <div id="secret-msg" style="text-align:center; margin-bottom: 20px;">[ OMEGA CLEARANCE VERIFIED ]</div>
 
-        <div class="profile-card reveal">
+        <div class="profile-card">
             <div class="profile-row">
                 <span class="label">CODENAME</span>
                 <span class="val-codename" id="user-codename">AUTHENTICATING...</span>
@@ -42,31 +41,27 @@
         </div>
 
         <div class="menu-grid">
-            <!-- Universal Access -->
-            <button class="menu-btn reveal nav-btn" data-target="projects.html">ACTIVE PROJECTS</button>
-            <button class="menu-btn reveal nav-btn" data-target="teams.html">TEAMS / DIRECTORY</button>
-            <button class="menu-btn reveal nav-btn" data-target="announcements.html">ANNOUNCEMENTS</button>
+            <button class="menu-btn nav-btn" data-target="projects.html">ACTIVE PROJECTS</button>
+            <button class="menu-btn nav-btn" data-target="teams.html">TEAMS / DIRECTORY</button>
+            <button class="menu-btn nav-btn" data-target="announcements.html">ANNOUNCEMENTS</button>
             
-            <!-- Rank Specific Chats -->
-            <button class="menu-btn member-chat-btn reveal nav-btn" data-target="chat_member.html">[ GLOBAL MEMBER CHAT ]</button>
-            <button class="menu-btn specialist-chat-btn reveal nav-btn" id="btn-chat-specialist" data-target="chat_specialist.html" style="display: none;">[ SPECIALIST COMM-LINK ]</button>
-            <button class="menu-btn council-chat-btn reveal nav-btn" id="btn-chat-council" data-target="chat_council.html" style="display: none;">[ COUNCIL COMM-LINK ]</button>
+            <button class="menu-btn member-chat-btn nav-btn" data-target="chat_member.html">[ GLOBAL MEMBER CHAT ]</button>
+            <button class="menu-btn specialist-chat-btn nav-btn" id="btn-chat-specialist" data-target="chat_specialist.html" style="display: none;">[ SPECIALIST COMM-LINK ]</button>
+            <button class="menu-btn council-chat-btn nav-btn" id="btn-chat-council" data-target="chat_council.html" style="display: none;">[ COUNCIL COMM-LINK ]</button>
             
-            <!-- Admin / Meeting -->
-            <button class="menu-btn council-chat-btn reveal nav-btn" id="btn-meeting" data-target="meeting.html" style="display: none;">COUNCIL CHAMBERS</button>
-            <button class="menu-btn admin-btn reveal nav-btn" id="btn-admin" data-target="admin.html" style="display: none;">[ ADMIN PANEL ]</button>
+            <button class="menu-btn council-chat-btn nav-btn" id="btn-meeting" data-target="meeting.html" style="display: none;">COUNCIL CHAMBERS</button>
+            <button class="menu-btn admin-btn nav-btn" id="btn-admin" data-target="admin.html" style="display: none;">[ ADMIN PANEL ]</button>
         </div>
 
-        <button class="logout-btn reveal" id="btn-logout">DISCONNECT SESSION</button>
+        <button class="logout-btn" id="btn-logout">DISCONNECT SESSION</button>
     </div>
 
     <script>
-    // --- 1. Supabase Core Logic ---
+    // --- 1. Supabase Logic (Unaltered) ---
     const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Page Transition Helper
     function smoothRoute(url) {
         document.getElementById('transition-overlay').classList.remove('loaded');
         setTimeout(() => window.location.href = url, 400);
@@ -74,7 +69,6 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
         const { data: { user }, error } = await supabaseClient.auth.getUser();
-
         if (error || !user) { window.location.replace("index.html"); return; }
 
         const codename = user.email.split('@')[0].toUpperCase(); 
@@ -85,28 +79,21 @@
         
         if (rankEl) {
             rankEl.textContent = rank;
-            if (rank === 'FOUNDER') { rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d'; rankEl.style.boxShadow = '0 0 10px rgba(255, 77, 77, 0.2)'; } 
-            else if (rank === 'COUNCIL') { rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff'; rankEl.style.boxShadow = '0 0 10px rgba(199, 125, 255, 0.2)'; } 
-            else if (rank === 'SPECIALIST') { rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff'; rankEl.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.2)'; } 
+            if (rank === 'FOUNDER') { rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d'; rankEl.style.boxShadow = '0 0 10px rgba(255, 77, 77, 0.4)'; } 
+            else if (rank === 'COUNCIL') { rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff'; rankEl.style.boxShadow = '0 0 10px rgba(199, 125, 255, 0.4)'; } 
+            else if (rank === 'SPECIALIST') { rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff'; rankEl.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.4)'; } 
             else { rankEl.style.color = '#888'; rankEl.style.borderColor = '#444'; }
         }
 
-        const showElement = (id) => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = "block";
-        };
-
+        const showElement = (id) => { const el = document.getElementById(id); if (el) el.style.display = "block"; };
         if (rank === 'FOUNDER' || rank === 'COUNCIL') {
             showElement("btn-admin"); showElement("btn-meeting"); showElement("btn-chat-council"); showElement("btn-chat-specialist");
         } else if (rank === 'SPECIALIST') { showElement("btn-chat-specialist"); }
 
-        document.getElementById("dashboard-box").style.display = "block";
+        document.getElementById("main-container").style.display = "block";
 
-        // Navigation Buttons Intercept
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                smoothRoute(this.getAttribute('data-target'));
-            });
+            btn.addEventListener('click', function() { smoothRoute(this.getAttribute('data-target')); });
         });
 
         const logoutBtn = document.getElementById("btn-logout");
@@ -117,18 +104,16 @@
             });
         }
 
-        initAdvancedUI(); // Boot up visual engine
+        initAdvancedUI(); 
     });
 
-    // --- 2. Advanced Visual Engine ---
+    // --- 2. Advanced Visual Engine (Safe Mode) ---
     function initAdvancedUI() {
-        // Page load reveal
         document.getElementById('transition-overlay').classList.add('loaded');
+        setTimeout(() => document.getElementById('main-container').classList.add('animation-complete'), 900);
         
         const isTouch = window.matchMedia('(pointer: coarse)').matches;
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // Easter Egg
         let clicks = 0;
         document.getElementById('obsidian-title').addEventListener('click', function() {
             clicks++;
@@ -139,39 +124,19 @@
             }
         });
 
-        // Intersection Observer (Staggered Reveals)
-        if (!prefersReducedMotion) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry, index) => {
-                    if (entry.isIntersecting) {
-                        setTimeout(() => entry.target.classList.add('visible'), index * 100); // Stagger delay
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-        } else {
-            document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-        }
-
-        if (prefersReducedMotion) return;
-
-        // Cursor & Parallax (Desktop)
         if (!isTouch) {
             const dot = document.getElementById('cursor-dot');
             const ring = document.getElementById('cursor-ring');
-            const box = document.getElementById('dashboard-box');
-
             window.addEventListener('mousemove', (e) => {
                 dot.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
                 ring.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
                 document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
                 document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
                 
-                const x = (window.innerWidth / 2 - e.clientX) / 50;
-                const y = (window.innerHeight / 2 - e.clientY) / 50;
-                box.style.transform = `rotateY(${x}deg) rotateX(${y}deg) translateY(${y}px)`;
+                const x = (window.innerWidth / 2 - e.clientX) / 40;
+                const y = (window.innerHeight / 2 - e.clientY) / 40;
+                document.documentElement.style.setProperty('--rotate-y', `${x}deg`);
+                document.documentElement.style.setProperty('--rotate-x', `${y}deg`);
             });
 
             document.querySelectorAll('button').forEach(el => {
@@ -180,37 +145,42 @@
             });
         }
 
-        // Lightweight Particles
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const pCount = isTouch ? 15 : 35; // Lower count for dashboard to keep performance pristine
+        const pCount = isTouch ? 25 : 50; 
+        let pointer = { x: -1000, y: -1000 };
         
+        window.addEventListener('mousemove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
+        window.addEventListener('touchmove', (e) => { pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY; });
+        window.addEventListener('touchend', () => { pointer.x = -1000; pointer.y = -1000; });
+
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize);
         resize();
 
         class Particle {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.4;
-                this.vy = (Math.random() - 0.5) * 0.4;
-                this.size = Math.random() * 1.5;
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
             }
             update() {
+                let dx = pointer.x - this.x; let dy = pointer.y - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100) { this.vx -= (dx / dist) * 0.05; this.vy -= (dy / dist) * 0.05; }
+                this.vx *= 0.99; this.vy *= 0.99;
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
             draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.shadowBlur = 5; ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
                 ctx.fill();
             }
         }
-        
         for (let i = 0; i < pCount; i++) particles.push(new Particle());
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
