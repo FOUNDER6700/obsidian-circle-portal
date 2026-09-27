@@ -6,30 +6,138 @@
     <title>Dashboard | The Obsidian Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* PREMIUM OBSIDIAN THEME & ANIMATIONS */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-        body { background-color: #000; color: #fff; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .dashboard-container { width: 100%; max-width: 480px; background-color: #0c0c0e; border: 1px solid #222; border-radius: 8px; padding: 28px 20px; box-shadow: 0 0 25px rgba(0, 0, 0, 0.9); }
-        .header-title { text-align: center; font-size: 17px; letter-spacing: 3px; color: #e0e0e0; font-weight: bold; margin-bottom: 20px; }
         
-        .profile-card { background-color: #121216; border: 1px solid #26262b; border-radius: 6px; padding: 16px; margin-bottom: 24px; }
-        .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+        body { 
+            background: linear-gradient(135deg, #000000 0%, #0a0a0e 50%, #000000 100%);
+            background-size: 200% 200%;
+            animation: ambientShift 20s ease infinite;
+            color: #fff; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px; 
+        }
+
+        @keyframes ambientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes entranceFade {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-container { 
+            width: 100%; 
+            max-width: 480px; 
+            background-color: rgba(12, 12, 14, 0.85); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid #222; 
+            border-radius: 8px; 
+            padding: 30px 25px; 
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255,255,255,0.02); 
+            animation: entranceFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .header-title { 
+            text-align: center; 
+            font-size: 18px; 
+            letter-spacing: 4px; 
+            color: #ffffff; 
+            font-weight: bold; 
+            margin-bottom: 25px; 
+            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+        }
+        
+        /* Staggered Animations for Elements */
+        .profile-card { 
+            background-color: #101014; 
+            border: 1px solid #26262b; 
+            border-radius: 6px; 
+            padding: 18px; 
+            margin-bottom: 25px; 
+            opacity: 0;
+            animation: entranceFade 0.5s ease forwards 0.2s; /* 0.2s delay */
+        }
+        
+        .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
         .profile-row:last-child { margin-bottom: 0; }
-        .label { color: #777; letter-spacing: 1px; }
-        .val-codename { color: #fff; font-weight: bold; letter-spacing: 1px; }
-        .badge-rank { padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; border: 1px solid #444; background: #000; }
+        .label { color: #777; letter-spacing: 1.5px; }
+        .val-codename { color: #fff; font-weight: bold; letter-spacing: 1.5px; }
+        .badge-rank { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 2px; border: 1px solid #444; background: #000; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         
-        .menu-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-        .menu-btn { background-color: #121216; color: #dedede; border: 1px solid #2b2b32; padding: 14px; border-radius: 5px; text-align: center; font-size: 13px; font-weight: bold; letter-spacing: 2px; cursor: pointer; transition: border-color 0.2s, background-color 0.2s, color 0.2s; }
-        .menu-btn:hover { border-color: #666; background-color: #18181f; color: #fff; }
+        .menu-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
+        
+        .menu-btn { 
+            background-color: #101014; 
+            color: #dedede; 
+            border: 1px solid #2b2b32; 
+            padding: 15px; 
+            border-radius: 5px; 
+            text-align: center; 
+            font-size: 13px; 
+            font-weight: bold; 
+            letter-spacing: 2px; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            opacity: 0;
+            animation: entranceFade 0.5s ease forwards;
+        }
+
+        /* Sequential Delays for Buttons */
+        .menu-grid .menu-btn:nth-child(1) { animation-delay: 0.3s; }
+        .menu-grid .menu-btn:nth-child(2) { animation-delay: 0.4s; }
+        .menu-grid .menu-btn:nth-child(3) { animation-delay: 0.5s; }
+        .menu-grid .menu-btn:nth-child(4) { animation-delay: 0.6s; }
+        .menu-grid .menu-btn:nth-child(5) { animation-delay: 0.7s; }
+        .menu-grid .menu-btn:nth-child(6) { animation-delay: 0.8s; }
+        .menu-grid .menu-btn:nth-child(7) { animation-delay: 0.9s; }
+
+        /* Premium Hover & Touch Effects */
+        .menu-btn:hover { 
+            border-color: #666; 
+            background-color: #18181f; 
+            color: #fff; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .menu-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
         
         /* Specialized Rank Buttons */
-        .member-chat-btn { border-color: #888 !important; color: #ccc !important; }
-        .specialist-chat-btn { border-color: #00e5ff !important; color: #00e5ff !important; background-color: rgba(0, 229, 255, 0.05); }
-        .council-chat-btn { border-color: #c77dff !important; color: #c77dff !important; background-color: rgba(157, 78, 221, 0.05); }
-        .admin-btn { border-color: #ff4d4d !important; color: #ff4d4d !important; background-color: rgba(255, 77, 77, 0.05); }
+        .member-chat-btn { border-color: #555 !important; color: #aaa !important; }
+        .specialist-chat-btn { border-color: rgba(0, 229, 255, 0.4) !important; color: #00e5ff !important; background-color: rgba(0, 229, 255, 0.03); }
+        .specialist-chat-btn:hover { box-shadow: 0 0 15px rgba(0, 229, 255, 0.15); border-color: #00e5ff !important; }
         
-        .logout-btn { width: 100%; background-color: transparent; color: #666; border: 1px solid #222; padding: 12px; border-radius: 5px; font-size: 12px; letter-spacing: 2px; cursor: pointer; }
-        .logout-btn:hover { color: #ff4d4d; border-color: #442222; }
+        .council-chat-btn { border-color: rgba(199, 125, 255, 0.4) !important; color: #c77dff !important; background-color: rgba(157, 78, 221, 0.03); }
+        .council-chat-btn:hover { box-shadow: 0 0 15px rgba(199, 125, 255, 0.15); border-color: #c77dff !important; }
+        
+        .admin-btn { border-color: rgba(255, 77, 77, 0.4) !important; color: #ff4d4d !important; background-color: rgba(255, 77, 77, 0.03); }
+        .admin-btn:hover { box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); border-color: #ff4d4d !important; }
+        
+        .logout-btn { 
+            width: 100%; 
+            background-color: transparent; 
+            color: #666; 
+            border: 1px solid #222; 
+            padding: 14px; 
+            border-radius: 5px; 
+            font-size: 12px; 
+            letter-spacing: 2px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: entranceFade 0.5s ease forwards 1s;
+        }
+        .logout-btn:hover { color: #ff4d4d; border-color: #ff4d4d; background-color: rgba(255, 77, 77, 0.05); transform: translateY(-1px); }
+        .logout-btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -67,11 +175,10 @@
         <button class="logout-btn" id="btn-logout">DISCONNECT SESSION</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+    <script>
     const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     document.addEventListener("DOMContentLoaded", async () => {
         // 1. Verify Login
@@ -83,8 +190,8 @@
         }
 
         // 2. Extract Data from Email
-        const codename = user.email.split('@')[0].toUpperCase(); // Turns "founder-01" into "FOUNDER-01"
-        const rank = codename.split('-')[0]; // Turns "FOUNDER-01" into "FOUNDER"
+        const codename = user.email.split('@')[0].toUpperCase(); 
+        const rank = codename.split('-')[0]; 
 
         // 3. Update the Profile Card text
         const codenameEl = document.getElementById("user-codename");
@@ -94,13 +201,16 @@
         if (rankEl) {
             rankEl.textContent = rank;
             
-            // Set clearance badge colors
+            // Set clearance badge colors & glows
             if (rank === 'FOUNDER') {
                 rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d';
+                rankEl.style.boxShadow = '0 0 10px rgba(255, 77, 77, 0.2)';
             } else if (rank === 'COUNCIL') {
                 rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff';
+                rankEl.style.boxShadow = '0 0 10px rgba(199, 125, 255, 0.2)';
             } else if (rank === 'SPECIALIST') {
                 rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff';
+                rankEl.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.2)';
             } else {
                 rankEl.style.color = '#888'; rankEl.style.borderColor = '#444';
             }
@@ -121,7 +231,7 @@
             showElement("btn-chat-specialist");
         }
 
-        // 5. Reveal the dashboard
+        // 5. Reveal the dashboard (Triggers CSS Animations)
         showElement("dashboard-box");
 
         // 6. Secure Logout
@@ -133,6 +243,6 @@
             });
         }
     });
-                    </script>
+    </script>
 </body>
 </html>
