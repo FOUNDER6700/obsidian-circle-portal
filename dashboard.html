@@ -84,12 +84,6 @@
                 .select('codename, rank')
                 .eq('id', session.user.id)
                 .single();
-
-            if (error || !profile) {
-                alert("Security handshake failed. Logging out.");
-                await supabaseClient.auth.signOut();
-                window.location.replace("index.html");
-                return;
             }
 
             const rank = (profile.rank || 'MEMBER').toUpperCase();
