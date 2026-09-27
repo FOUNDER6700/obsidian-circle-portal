@@ -2,37 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Obsidian Circle | Portal</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Load Supabase securely from their official network -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Obsidian Circle - Secure Portal</title>
+    
+    <!-- Supabase CDN (Required) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* The Obsidian Circle - Tactical Dark Theme */
+        body {
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #1a1a1a;
+            padding: 40px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            color: #b3b3b3;
+        }
+
+        h2 {
+            font-size: 14px;
+            color: #595959;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: #0d0d0d;
+            border: 1px solid #404040;
+            color: #fff;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #737373;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #595959;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: #4d4d4d;
+        }
+        
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        #error-msg {
+            margin-top: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #ff4c4c;
+            display: none;
+        }
+    </style>
 </head>
 <body>
 
     <div class="login-container">
-        <div class="logo-symbol">◎</div>
-        <h1>The Obsidian Circle</h1>
-        <div class="motto">Knowledge. Unity. Purpose.</div>
+        <h1>THE OBSIDIAN CIRCLE</h1>
+        <h2>RESTRICTED ACCESS</h2>
 
-        <form id="login-form">
-            <div class="input-group">
-                <label>MEMBER ID</label>
-                <input type="text" id="member-id" placeholder="e.g. FOUNDER-01" required autocomplete="off">
-            </div>
+        <!-- The form intercepts mobile keyboard 'Enter' presses and stops the page refresh -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <input type="text" id="email" placeholder="ENTER ID (e.g. COUNCIL-01)" required>
+            <input type="password" id="password" placeholder="PASSWORD" required>
             
-            <div class="input-group">
-                <label>PASSWORD</label>
-                <input type="password" id="password" required>
-            </div>
-
-            <button type="submit" id="login-btn">AUTHENTICATE</button>
-            <div id="error-message"></div>
+            <button type="submit" id="login-btn">INITIATE LOGIN</button>
         </form>
+        
+        <p id="error-msg"></p>
     </div>
 
-    <!-- Load our custom engine -->
-    <script src="aap.js"></script>
+    <!-- Supabase Configuration -->
+    <script>
+        // PASTE YOUR ACTUAL SUPABASE URL AND KEY HERE BEFORE SAVING
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
+    <!-- Links to your app.js logic (?v=3 breaks mobile cache to ensure the newest code loads) -->
+    <script src="app.js?v=3"></script>
+
 </body>
 </html>
-  
