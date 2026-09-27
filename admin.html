@@ -11,7 +11,8 @@
         .section { background-color: #070709; border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
         .section-title { color: #888; font-size: 12px; margin-bottom: 10px; letter-spacing: 1px; }
         .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-        input[type="text"] { width: 100%; box-sizing: border-box; padding: 12px; background-color: #000; border: 1px solid #555; color: #fff; border-radius: 4px; font-family: monospace; }
+        input[type="text"], textarea { width: 100%; box-sizing: border-box; padding: 12px; background-color: #000; border: 1px solid #555; color: #fff; border-radius: 4px; font-family: monospace; }
+        textarea { resize: vertical; min-height: 80px; }
         button { background-color: #ff4d4d; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px; width: 100%; margin-bottom: 10px; }
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
         .user-name { font-size: 14px; color: #fff; }
@@ -32,7 +33,16 @@
                 <input type="text" id="input-proj-name" placeholder="PROJECT NAME" autocomplete="off">
                 <input type="text" id="input-proj-desc" placeholder="PROJECT DESCRIPTION" autocomplete="off">
             </div>
-            <button id="btn-deploy-proj">DEPLOY</button>
+            <button id="btn-deploy-proj">DEPLOY PROJECT</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">TRANSMIT ANNOUNCEMENT</div>
+            <div class="input-group">
+                <input type="text" id="input-announcement-title" placeholder="ANNOUNCEMENT TITLE" autocomplete="off">
+                <textarea id="input-announcement-desc" placeholder="MESSAGE BODY"></textarea>
+            </div>
+            <button id="btn-post-announcement">TRANSMIT RECORD</button>
         </div>
 
         <div class="section">
@@ -72,6 +82,7 @@
             const adminUI = document.getElementById("admin-ui");
             if (adminUI) adminUI.style.display = 'block';
 
+            // Project Deployment Logic
             const deployBtn = document.getElementById("btn-deploy-proj");
             if (deployBtn) {
                 deployBtn.addEventListener("click", async () => {
@@ -86,6 +97,26 @@
                         alert("PROJECT DEPLOYED SECURELY.");
                         document.getElementById("input-proj-name").value = "";
                         document.getElementById("input-proj-desc").value = "";
+                    }
+                });
+            }
+
+            // Announcement Posting Logic
+            const announceBtn = document.getElementById("btn-post-announcement");
+            if (announceBtn) {
+                announceBtn.addEventListener("click", async () => {
+                    const aTitle = document.getElementById("input-announcement-title").value.trim().toUpperCase();
+                    const aDesc = document.getElementById("input-announcement-desc").value.trim();
+
+                    if (!aTitle || !aDesc) { alert("Please provide both a Title and Message."); return; }
+
+                    // Assuming your table is named 'announcements' (change this if yours is named differently)
+                    const { error: insertError } = await supabaseClient.from('announcements').insert([{ title: aTitle, description: aDesc }]);
+                    if (insertError) { alert("ERROR: Database rejected the announcement."); } 
+                    else {
+                        alert("ANNOUNCEMENT TRANSMITTED SECURELY.");
+                        document.getElementById("input-announcement-title").value = "";
+                        document.getElementById("input-announcement-desc").value = "";
                     }
                 });
             }
@@ -113,4 +144,5 @@
         }
     </script>
 </body>
-</html>
+    </html>
+    
