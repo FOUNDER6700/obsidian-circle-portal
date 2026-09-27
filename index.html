@@ -5,93 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Obsidian Circle - Secure Portal</title>
     
-    <!-- Supabase CDN (Required) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* The Obsidian Circle - Tactical Dark Theme */
-        body {
-            background-color: #0d0d0d;
-            color: #ffffff;
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .login-container {
-            background-color: #1a1a1a;
-            padding: 40px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 20px;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-            color: #b3b3b3;
-        }
-
-        h2 {
-            font-size: 14px;
-            color: #595959;
-            margin-bottom: 30px;
-            letter-spacing: 1px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            background-color: #0d0d0d;
-            border: 1px solid #404040;
-            color: #fff;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #737373;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #595959;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-            letter-spacing: 1px;
-            border-radius: 4px;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background-color: #4d4d4d;
-        }
-        
-        button:disabled {
-            cursor: not-allowed;
-        }
-
-        #error-msg {
-            margin-top: 15px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #ff4c4c;
-            display: none;
-        }
+        body { background-color: #0d0d0d; color: #ffffff; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background-color: #1a1a1a; padding: 40px; border: 1px solid #333; border-radius: 8px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); width: 100%; max-width: 350px; text-align: center; }
+        h1 { font-size: 20px; letter-spacing: 2px; margin-bottom: 5px; color: #b3b3b3; }
+        h2 { font-size: 14px; color: #595959; margin-bottom: 30px; letter-spacing: 1px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background-color: #0d0d0d; border: 1px solid #404040; color: #fff; border-radius: 4px; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; }
+        input:focus { outline: none; border-color: #737373; }
+        button { width: 100%; padding: 12px; background-color: #333; color: #fff; border: 1px solid #595959; cursor: pointer; font-family: 'Courier New', Courier, monospace; font-weight: bold; letter-spacing: 1px; border-radius: 4px; transition: 0.3s; }
+        button:hover { background-color: #4d4d4d; }
+        button:disabled { cursor: not-allowed; opacity: 0.7; }
+        #error-msg { margin-top: 15px; font-size: 12px; font-weight: bold; color: #ff4c4c; display: none; }
     </style>
 </head>
 <body>
@@ -100,27 +26,74 @@
         <h1>THE OBSIDIAN CIRCLE</h1>
         <h2>RESTRICTED ACCESS</h2>
 
-        <!-- The form intercepts mobile keyboard 'Enter' presses and stops the page refresh -->
         <form id="login-form" onsubmit="handleLogin(event)">
             <input type="text" id="email" placeholder="ENTER ID (e.g. COUNCIL-01)" required>
             <input type="password" id="password" placeholder="PASSWORD" required>
-            
             <button type="submit" id="login-btn">INITIATE LOGIN</button>
         </form>
         
         <p id="error-msg"></p>
     </div>
 
-    <!-- Supabase Configuration -->
     <script>
-        // PASTE YOUR ACTUAL SUPABASE URL AND KEY HERE BEFORE SAVING
-        const supabaseUrl = 'b7a8eb95-f61c-4738-9f7f-fcbb019eff62';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // Extracted directly from your JWT
+        const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const supabaseKey = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
+        
+        let supabaseClient;
+        try {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        } catch (err) {
+            document.getElementById("error-msg").textContent = "SYSTEM ERROR: SUPABASE CDN FAILED TO LOAD.";
+            document.getElementById("error-msg").style.display = "block";
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault(); 
+
+            let inputId = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorMsg = document.getElementById("error-msg");
+            const loginBtn = document.getElementById("login-btn");
+
+            errorMsg.style.display = "none";
+
+            if (!inputId.includes('@')) {
+                inputId = inputId.toLowerCase() + '@obsidian.com';
+            }
+
+            loginBtn.textContent = "AUTHENTICATING...";
+            loginBtn.disabled = true;
+
+            if (!supabaseClient) {
+                errorMsg.textContent = "CONNECTION FAILED: SYSTEM NOT INITIALIZED.";
+                errorMsg.style.display = "block";
+                loginBtn.textContent = "INITIATE LOGIN";
+                loginBtn.disabled = false;
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: inputId,
+                    password: password
+                });
+
+                if (error) {
+                    errorMsg.textContent = "ACCESS DENIED: " + error.message.toUpperCase();
+                    errorMsg.style.display = "block";
+                    loginBtn.textContent = "INITIATE LOGIN";
+                    loginBtn.disabled = false;
+                } else {
+                    window.location.replace("dashboard.html");
+                }
+            } catch (err) {
+                errorMsg.textContent = "CONNECTION FAILED: " + err.message.toUpperCase();
+                errorMsg.style.display = "block";
+                loginBtn.textContent = "INITIATE LOGIN";
+                loginBtn.disabled = false;
+            }
+        }
     </script>
-
-    <!-- Links to your app.js logic (?v=3 breaks mobile cache to ensure the newest code loads) -->
-    <script src="app.js?v=10"></script>
-
 </body>
 </html>
