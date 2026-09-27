@@ -6,150 +6,107 @@
     <title>Admin Panel | The Obsidian Circle</title>
     <style>
         body { background-color: #000; color: #fff; font-family: monospace; margin: 0; padding: 20px; }
-        .admin-container {
-            width: 100%; max-width: 600px; margin: 0 auto;
-            background-color: #121215; padding: 30px 20px;
-            border-radius: 8px; border: 1px solid #ff5555;
-        }
-        .header-title { text-align: center; margin-bottom: 20px; font-size: 18px; letter-spacing: 3px; color: #ff5555; font-weight: bold; }
-        
-        .create-box { background-color: #070709; border: 1px solid #333; padding: 15px; border-radius: 4px; margin-bottom: 25px; }
-        .create-title { font-size: 12px; color: #ff5555; letter-spacing: 2px; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 10px;}
-        
-        input[type="text"], textarea {
-            width: 100%; padding: 12px; margin-bottom: 10px; background-color: #121215; 
-            border: 1px solid #444; color: #fff; border-radius: 4px; font-family: monospace; box-sizing: border-box;
-        }
-        textarea { resize: vertical; min-height: 80px; }
-        .action-btn { background-color: #ff5555; color: #fff; border: none; width: 100%; padding: 12px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 1px; cursor: pointer; }
-        
-        .user-row { display: flex; justify-content: space-between; align-items: center; background-color: #121215; padding: 10px; margin-bottom: 8px; border: 1px solid #333; border-radius: 4px; }
-        .user-name { font-weight: bold; font-size: 14px; color: #fff; }
-        .user-controls { display: flex; gap: 5px; }
-        .rank-select { background: #000; color: #fff; border: 1px solid #555; padding: 5px; border-radius: 3px; font-size: 11px; font-family: monospace; }
-        .set-btn { background: #ff5555; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; font-weight: bold; cursor: pointer; font-size: 11px; }
-
-        .back-btn { background-color: #333; color: #fff; margin-top: 20px; border: none; width: 100%; padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer; }
+        .admin-container { max-width: 600px; margin: 0 auto; background-color: #121215; padding: 20px; border-radius: 8px; border: 1px solid #ff4d4d; }
+        .header-title { text-align: center; margin-bottom: 20px; font-size: 16px; letter-spacing: 2px; color: #ff4d4d; font-weight: bold; }
+        .section { background-color: #070709; border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .section-title { color: #888; font-size: 12px; margin-bottom: 10px; letter-spacing: 1px; }
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        input[type="text"] { width: 100%; box-sizing: border-box; padding: 12px; background-color: #000; border: 1px solid #555; color: #fff; border-radius: 4px; font-family: monospace; }
+        button { background-color: #ff4d4d; color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px; width: 100%; margin-bottom: 10px; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+        .user-name { font-size: 14px; color: #fff; }
+        .user-controls { display: flex; gap: 10px; }
+        select { background: #000; color: #fff; border: 1px solid #555; padding: 5px; font-family: monospace; border-radius: 3px; }
+        .set-btn { padding: 5px 15px; width: auto; margin: 0; background-color: #333; color: #fff; }
+        .back-btn { background-color: #222; color: #fff; margin-top: 15px; border: none; width: 100%; padding: 12px; border-radius: 4px; font-size: 12px; letter-spacing: 1px; cursor: pointer; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Hide the page immediately upon loading to prevent unauthorized flashing
+        document.documentElement.style.display = 'none';
+    </script>
 </head>
-    <!-- Supabase CDN (Required to check the user's identity) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-    // 1. Instantly hide the page to prevent a flash of sensitive data
-    document.documentElement.style.display = 'none';
-
-    // 2. Initialize Supabase
-    const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-    // 3. The Bouncer Logic
-    async function secureAdminPage() {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-        
-        // If there is no active session, or the email is NOT the Founder, kick them out
-        if (!user || user.email !== 'founder-01@obsidian.com') {
-            window.location.replace("dashboard.html");
-        } else {
-            // If they are the Founder, reveal the Admin Panel
-            document.documentElement.style.display = 'block';
-        }
-    }
-    
-    secureAdminPage();
-</script>
-
 <body>
-
-    <div class="admin-container" id="main-box" style="display: none;">
-        <div class="header-title">◎ FOUNDER COMMAND ◎</div>
+    <div class="admin-container" id="admin-ui" style="display: none;">
+        <div class="header-title">◎ ADMIN PANEL ◎</div>
         
-        <!-- Announcements Panel -->
-        <div class="create-box">
-            <div class="create-title">+ OVERRIDE: BROADCAST ANNOUNCEMENT</div>
-            <input type="text" id="input-ann-title" placeholder="TRANSMISSION TITLE" autocomplete="off">
-            <textarea id="input-ann-body" placeholder="ENTER MESSAGE PAYLOAD..."></textarea>
-            <button class="action-btn" id="btn-deploy-ann">AUTHORIZE BROADCAST</button>
+        <div class="section">
+            <div class="section-title">DEPLOY NEW PROJECT</div>
+            <div class="input-group">
+                <input type="text" id="input-proj-name" placeholder="PROJECT NAME" autocomplete="off">
+                <input type="text" id="input-proj-desc" placeholder="PROJECT DESCRIPTION" autocomplete="off">
+            </div>
+            <button id="btn-deploy-proj">DEPLOY</button>
         </div>
 
-        <!-- Project Deployment Panel -->
-        <div class="create-box">
-            <div class="create-title">+ OVERRIDE: DEPLOY PROJECT</div>
-            <input type="text" id="input-proj-name" placeholder="PROJECT NAME (e.g. PROJECT OMEGA)" autocomplete="off">
-            <input type="text" id="input-proj-desc" placeholder="OBJECTIVE / DESCRIPTION" autocomplete="off">
-            <button class="action-btn" id="btn-deploy-proj">INITIATE DEPLOYMENT</button>
-        </div>
-
-        <!-- Personnel Override Panel -->
-        <div class="create-box">
-            <div class="create-title">◎ PERSONNEL CLEARANCE OVERRIDE</div>
-            <div id="roster-list"><div style="color: #888; font-size: 12px; text-align: center;">DECRYPTING ROSTER...</div></div>
+        <div class="section">
+            <div class="section-title">PERSONNEL ROSTER</div>
+            <div id="roster-list">
+                <div style="color: #666; text-align: center; font-size: 12px;">LOADING SECURE ROSTER...</div>
+            </div>
         </div>
 
         <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
     </div>
 
+    <!-- Supabase Secure Admin Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let myCodename = "COMMAND";
+        const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.replace("index.html"); return; }
-
-            const { data: profile } = await supabaseClient.from('profiles').select('rank, codename').eq('id', session.user.id).single();
+            // 1. Verify Login & Admin Clearance
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
             
-            if (!profile || (profile.rank !== 'FOUNDER' && profile.rank !== 'COUNCIL')) {
-                document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">SECURITY ALERT: CLEARANCE DENIED</h2>`;
-                setTimeout(() => window.location.replace("dashboard.html"), 2000);
+            if (error || !user) {
+                window.location.replace("index.html");
                 return;
             }
 
-            myCodename = profile.codename;
-            document.getElementById("main-box").style.display = "block";
+            const emailPrefix = user.email.split('@')[0].toUpperCase();
+            const rank = emailPrefix.split('-')[0];
+
+            // 2. Reject anyone who isn't FOUNDER or COUNCIL
+            if (rank !== 'FOUNDER' && rank !== 'COUNCIL') {
+                window.location.replace("dashboard.html");
+                return;
+            }
+
+            // 3. Authorization successful: Restore Screen Visibility
+            document.documentElement.style.display = 'block';
+            
+            const adminUI = document.getElementById("admin-ui");
+            if (adminUI) adminUI.style.display = 'block';
+
+            // 4. Handle Projects logic
+            const deployBtn = document.getElementById("btn-deploy-proj");
+            if (deployBtn) {
+                deployBtn.addEventListener("click", async () => {
+                    const pName = document.getElementById("input-proj-name").value.trim().toUpperCase();
+                    const pDesc = document.getElementById("input-proj-desc").value.trim();
+
+                    if (!pName || !pDesc) { alert("Please provide both a Name and Description."); return; }
+
+                    const { error: insertError } = await supabaseClient.from('projects').insert([{ title: pName, description: pDesc }]);
+                    if (insertError) { alert("ERROR: Database rejected the deployment."); } 
+                    else {
+                        alert("PROJECT DEPLOYED SECURELY.");
+                        document.getElementById("input-proj-name").value = "";
+                        document.getElementById("input-proj-desc").value = "";
+                    }
+                });
+            }
+
+            // 5. Initialize Database Roster
             loadRoster();
-
-            // Handle Announcements
-            document.getElementById("btn-deploy-ann").addEventListener("click", async () => {
-                const aTitle = document.getElementById("input-ann-title").value.trim().toUpperCase();
-                const aBody = document.getElementById("input-ann-body").value.trim();
-
-                if (!aTitle || !aBody) { alert("Please provide both Title and Message."); return; }
-
-                const { error } = await supabaseClient.from('announcements').insert([{ title: aTitle, content: aBody, author_codename: myCodename }]);
-                if (error) { alert("ERROR: Database rejected the broadcast."); } 
-                else {
-                    alert("BROADCAST SUCCESSFUL.");
-                    document.getElementById("input-ann-title").value = "";
-                    document.getElementById("input-ann-body").value = "";
-                }
-            });
-
-            // Handle Projects
-            document.getElementById("btn-deploy-proj").addEventListener("click", async () => {
-                const pName = document.getElementById("input-proj-name").value.trim().toUpperCase();
-                const pDesc = document.getElementById("input-proj-desc").value.trim();
-
-                if (!pName || !pDesc) { alert("Please provide both a Name and Description."); return; }
-
-                const { error } = await supabaseClient.from('projects').insert([{ title: pName, description: pDesc }]);
-                if (error) { alert("ERROR: Database rejected the deployment."); } 
-                else {
-                    alert("PROJECT DEPLOYED SECURELY.");
-                    document.getElementById("input-proj-name").value = "";
-                    document.getElementById("input-proj-desc").value = "";
-                }
-            });
         });
 
         async function loadRoster() {
-            const { data: users, error } = await supabaseClient.from('profiles').select('id, codename, rank').order('created_at');
             const rosterContainer = document.getElementById("roster-list");
+            if (!rosterContainer) return;
+
+            const { data: users, error } = await supabaseClient.from('profiles').select('id, codename, rank').order('created_at');
             if (error) { rosterContainer.innerHTML = "<div style='color:red; text-align:center;'>Error loading roster.</div>"; return; }
 
             rosterContainer.innerHTML = "";
