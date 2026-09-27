@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Meeting Room | The Obsidian Circle</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        body { background-color: #000; color: #fff; font-family: monospace; margin: 0; padding: 20px; }
         .meeting-container {
             width: 100%; max-width: 600px; margin: 0 auto;
             background-color: #121215; padding: 20px 10px;
@@ -42,6 +42,10 @@
             padding: 14px; border-radius: 4px; font-size: 14px; font-weight: bold; letter-spacing: 2px; cursor: pointer;
         }
     </style>
+    <script>
+        // Hide the page immediately to prevent unauthorized flashing
+        document.documentElement.style.display = 'none';
+    </script>
 </head>
 <body>
 
@@ -65,6 +69,7 @@
         <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
@@ -75,20 +80,28 @@
         const JITSI_URL = "https://meet.jit.si/ObsidianCircleCouncilClassified";
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.replace("index.html"); return; }
-
-            const { data: profile } = await supabaseClient.from('profiles').select('rank').eq('id', session.user.id).single();
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
             
-            if (!profile || (profile.rank !== 'FOUNDER' && profile.rank !== 'COUNCIL')) {
-                document.body.innerHTML = `<h2 style="color:red; text-align:center; margin-top:50px;">SECURITY ALERT: CLEARANCE DENIED</h2>`;
-                setTimeout(() => window.location.replace("dashboard.html"), 2000);
+            if (error || !user) {
+                window.location.replace("index.html");
                 return;
             }
 
-            myRank = profile.rank;
+            // Extract Rank directly from Email
+            const emailPrefix = user.email.split('@')[0].toUpperCase();
+            myRank = emailPrefix.split('-')[0];
+            
+            // Maximum Security Check: Boot anyone who isn't Council or Founder
+            if (myRank !== 'FOUNDER' && myRank !== 'COUNCIL') {
+                window.location.replace("dashboard.html");
+                return;
+            }
+
+            // Authorization successful: Restore Screen Visibility
+            document.documentElement.style.display = 'block';
             document.getElementById("main-box").style.display = "block";
             
+            // Unhide video controls if Founder
             if (myRank === 'FOUNDER') {
                 document.getElementById("founder-controls").style.display = "flex";
             }
@@ -129,5 +142,4 @@
         }
     </script>
 </body>
-  </html>
-  
+</html>
