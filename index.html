@@ -16,6 +16,7 @@
     <div class="ambient-light"></div>
 
     <div class="login-container" id="main-container">
+        <!-- Cinematic Text Reveal Target -->
         <h1 id="obsidian-title">THE OBSIDIAN CIRCLE</h1>
         <h2>RESTRICTED ACCESS</h2>
         <div id="secret-msg">[ OMEGA CLEARANCE VERIFIED ]</div>
@@ -23,23 +24,14 @@
         <form id="login-form" onsubmit="handleLogin(event)">
             <input type="text" id="email" placeholder="ENTER ID (e.g. COUNCIL-01)" required autocomplete="off">
             <input type="password" id="password" placeholder="PASSWORD" required>
-            <button type="submit" id="login-btn">INITIATE LOGIN</button>
+            <button type="submit" id="login-btn" class="magnetic-btn">INITIATE LOGIN</button>
         </form>
         
         <p id="error-msg"></p>
     </div>
 
     <script>
-        // --- 1. Authentic Page Load Transition ---
-        window.onload = () => {
-            document.getElementById('transition-overlay').classList.add('loaded');
-            // Allow CSS entrance animation to finish before handing control to Parallax JS
-            setTimeout(() => {
-                document.getElementById('main-container').classList.add('animation-complete');
-            }, 900);
-        };
-
-        // --- 2. Unaltered Supabase Auth ---
+        // --- 1. Supabase Authentication (Unaltered) ---
         const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
         let supabaseClient;
@@ -73,7 +65,7 @@
                     loginBtn.disabled = false;
                 } else {
                     document.getElementById('transition-overlay').classList.remove('loaded');
-                    setTimeout(() => window.location.replace("dashboard.html"), 400);
+                    setTimeout(() => window.location.replace("dashboard.html"), 500); // Matched to CSS transition speed
                 }
             } catch (err) {
                 errorMsg.textContent = "CONNECTION FAILED.";
@@ -83,102 +75,175 @@
             }
         }
 
-        // --- 3. Non-Conflicting Visual Engine ---
-        (function initAdvancedUI() {
-            const isTouch = window.matchMedia('(pointer: coarse)').matches;
-            
-            // Easter Egg
-            let clicks = 0;
-            document.getElementById('obsidian-title').addEventListener('click', function() {
-                clicks++;
-                if (clicks === 5) {
-                    this.classList.add('glitch-active');
-                    document.getElementById('secret-msg').style.display = 'block';
-                    setTimeout(() => { this.classList.remove('glitch-active'); document.getElementById('secret-msg').style.display = 'none'; clicks = 0; }, 3000);
-                }
-            });
-
-            // Ambient Light & Parallax Engine (Updates CSS variables safely)
-            if (!isTouch) {
-                const dot = document.getElementById('cursor-dot');
-                const ring = document.getElementById('cursor-ring');
+        // --- 2. Advanced Motion Architecture ---
+        class ObsidianMotion {
+            constructor() {
+                this.isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+                this.prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 
-                window.addEventListener('mousemove', (e) => {
-                    dot.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
-                    ring.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
-                    
-                    document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-                    document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-                    
-                    const x = (window.innerWidth / 2 - e.clientX) / 30; // Stronger Parallax
-                    const y = (window.innerHeight / 2 - e.clientY) / 30;
-                    document.documentElement.style.setProperty('--rotate-y', `${x}deg`);
-                    document.documentElement.style.setProperty('--rotate-x', `${y}deg`);
+                // Lerp state
+                this.mouseX = window.innerWidth / 2; this.mouseY = window.innerHeight / 2;
+                this.lerpX = this.mouseX; this.lerpY = this.mouseY;
+                
+                // Particle system
+                this.canvas = document.getElementById('particle-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.particleCount = this.isDesktop ? 40 : 20;
+
+                this.init();
+            }
+
+            init() {
+                // Intro Transition
+                window.onload = () => {
+                    document.getElementById('transition-overlay').classList.add('loaded');
+                    this.cinematicTextReveal();
+                    setTimeout(() => document.getElementById('main-container').classList.add('animation-complete'), 1200);
+                };
+
+                // Easter Egg
+                this.initEasterEgg();
+
+                // Particle Engine
+                this.initParticles();
+                
+                if (this.prefersReduced) return;
+
+                // Heavy interactions restricted to Desktop
+                if (this.isDesktop) {
+                    window.addEventListener('mousemove', (e) => { this.mouseX = e.clientX; this.mouseY = e.clientY; });
+                    this.initCursor();
+                    this.initMagneticButtons();
+                    this.tick(); // Start single requestAnimationFrame loop
+                }
+            }
+
+            cinematicTextReveal() {
+                const title = document.getElementById('obsidian-title');
+                const text = title.innerText;
+                title.innerHTML = '';
+                
+                // Split words to preserve spacing, wrap letters in spans
+                text.split(' ').forEach((word, wordIdx, wordsArr) => {
+                    word.split('').forEach((char, charIdx) => {
+                        const span = document.createElement('span');
+                        span.innerText = char;
+                        span.className = 'char-span';
+                        // Stagger delay based on index
+                        setTimeout(() => span.classList.add('revealed'), (wordIdx * 100) + (charIdx * 30) + 400);
+                        title.appendChild(span);
+                    });
+                    if (wordIdx < wordsArr.length - 1) title.appendChild(document.createTextNode('\u00A0')); // Space
                 });
 
-                document.querySelectorAll('button, input').forEach(el => {
-                    el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
-                    el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+                // Add glowing class after reveal completes
+                setTimeout(() => title.classList.add('glow-active'), 1500);
+            }
+
+            initEasterEgg() {
+                let clicks = 0;
+                document.getElementById('obsidian-title').addEventListener('click', function() {
+                    clicks++;
+                    if (clicks === 5) {
+                        this.classList.add('glitch-active');
+                        document.getElementById('secret-msg').style.display = 'block';
+                        setTimeout(() => { this.classList.remove('glitch-active'); document.getElementById('secret-msg').style.display = 'none'; clicks = 0; }, 3000);
+                    }
                 });
             }
 
-            // Visible Interactive Canvas Particles
-            const canvas = document.getElementById('particle-canvas');
-            const ctx = canvas.getContext('2d');
-            let particles = [];
-            const pCount = isTouch ? 30 : 60; // Denser particles
-            let pointer = { x: -1000, y: -1000 };
-            
-            window.addEventListener('mousemove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
-            window.addEventListener('touchmove', (e) => { pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY; });
-            window.addEventListener('touchend', () => { pointer.x = -1000; pointer.y = -1000; });
+            initCursor() {
+                this.dot = document.getElementById('cursor-dot');
+                this.ring = document.getElementById('cursor-ring');
+                document.body.style.cursor = 'none';
+                
+                document.querySelectorAll('button, input').forEach(el => {
+                    el.addEventListener('mouseenter', () => this.ring.classList.add('hovering'));
+                    el.addEventListener('mouseleave', () => this.ring.classList.remove('hovering'));
+                });
+            }
 
-            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-            window.addEventListener('resize', resize);
-            resize();
+            initMagneticButtons() {
+                document.querySelectorAll('.magnetic-btn').forEach(btn => {
+                    btn.addEventListener('mousemove', (e) => {
+                        const rect = btn.getBoundingClientRect();
+                        const x = e.clientX - rect.left - rect.width / 2;
+                        const y = e.clientY - rect.top - rect.height / 2;
+                        btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
+                    });
+                    btn.addEventListener('mouseleave', () => {
+                        btn.style.transform = ''; // Snaps back using CSS spring
+                    });
+                });
+            }
 
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.6;
-                    this.vy = (Math.random() - 0.5) * 0.6;
-                    this.size = Math.random() * 2 + 1; // Larger particles
+            initParticles() {
+                const resize = () => { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; };
+                window.addEventListener('resize', resize); resize();
+
+                for (let i = 0; i < this.particleCount; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                        size: Math.random() * 1.5 + 0.5
+                    });
                 }
-                update() {
-                    // Repel from pointer
-                    let dx = pointer.x - this.x;
-                    let dy = pointer.y - this.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        this.vx -= (dx / dist) * 0.05;
-                        this.vy -= (dy / dist) * 0.05;
+                
+                // If mobile, start a simple interval loop to save battery instead of rAF
+                if (!this.isDesktop) {
+                    setInterval(() => this.drawParticles(), 1000 / 30);
+                }
+            }
+
+            drawParticles() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.particles.forEach(p => {
+                    // Pointer repel
+                    if (this.isDesktop) {
+                        let dx = this.mouseX - p.x; let dy = this.mouseY - p.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) { p.vx -= (dx / dist) * 0.02; p.vy -= (dy / dist) * 0.02; }
                     }
                     
-                    // Friction & bounds
-                    this.vx *= 0.99; this.vy *= 0.99;
-                    this.x += this.vx; this.y += this.vy;
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                }
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // Visually distinct
-                    ctx.shadowBlur = 5;
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-                    ctx.fill();
-                }
+                    p.vx *= 0.98; p.vy *= 0.98;
+                    p.x += p.vx; p.y += p.vy;
+                    
+                    if (p.x < 0 || p.x > this.canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > this.canvas.height) p.vy *= -1;
+
+                    this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    this.ctx.fill();
+                });
             }
-            
-            for (let i = 0; i < pCount; i++) particles.push(new Particle());
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => { p.update(); p.draw(); });
-                requestAnimationFrame(animate);
+
+            tick() {
+                // Lerp logic for smooth tracking
+                this.lerpX += (this.mouseX - this.lerpX) * 0.1;
+                this.lerpY += (this.mouseY - this.lerpY) * 0.1;
+
+                // Update cursor
+                this.dot.style.transform = `translate(calc(${this.mouseX}px - 50%), calc(${this.mouseY}px - 50%))`;
+                this.ring.style.transform = `translate(calc(${this.lerpX}px - 50%), calc(${this.lerpY}px - 50%))`;
+
+                // Update Ambient Spotlight CSS Variables
+                document.documentElement.style.setProperty('--mouse-x', `${this.lerpX}px`);
+                document.documentElement.style.setProperty('--mouse-y', `${this.lerpY}px`);
+
+                // Update Container Parallax (Smooth depth)
+                const rotX = (window.innerHeight / 2 - this.lerpY) / 50;
+                const rotY = (this.lerpX - window.innerWidth / 2) / 50;
+                document.documentElement.style.setProperty('--rotate-x', `${rotX}deg`);
+                document.documentElement.style.setProperty('--rotate-y', `${rotY}deg`);
+
+                this.drawParticles();
+                requestAnimationFrame(() => this.tick());
             }
-            animate();
-        })();
+        }
+
+        // Boot engine
+        new ObsidianMotion();
     </script>
 </body>
 </html>
