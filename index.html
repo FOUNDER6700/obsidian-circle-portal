@@ -9,14 +9,13 @@
 </head>
 <body>
     
-    <!-- Advanced UI Layers -->
     <div class="page-transition-overlay" id="transition-overlay"></div>
     <div class="cursor-dot" id="cursor-dot"></div>
     <div class="cursor-ring" id="cursor-ring"></div>
     <canvas id="particle-canvas"></canvas>
     <div class="ambient-light"></div>
 
-    <div class="login-container" id="parallax-container">
+    <div class="login-container" id="main-container">
         <h1 id="obsidian-title">THE OBSIDIAN CIRCLE</h1>
         <h2>RESTRICTED ACCESS</h2>
         <div id="secret-msg">[ OMEGA CLEARANCE VERIFIED ]</div>
@@ -30,22 +29,23 @@
         <p id="error-msg"></p>
     </div>
 
-    <!-- UI/UX Engine & Authentication -->
     <script>
-        // --- 1. Page Transition In ---
+        // --- 1. Authentic Page Load Transition ---
         window.onload = () => {
             document.getElementById('transition-overlay').classList.add('loaded');
+            // Allow CSS entrance animation to finish before handing control to Parallax JS
+            setTimeout(() => {
+                document.getElementById('main-container').classList.add('animation-complete');
+            }, 900);
         };
 
-        // --- 2. Supabase Auth ---
+        // --- 2. Unaltered Supabase Auth ---
         const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
         let supabaseClient;
-        
-        try {
-            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        } catch (err) {
-            document.getElementById("error-msg").textContent = "SYSTEM ERROR: SUPABASE CDN FAILED TO LOAD.";
+        try { supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); } 
+        catch (err) {
+            document.getElementById("error-msg").textContent = "SYSTEM ERROR: SUPABASE CDN FAILED.";
             document.getElementById("error-msg").style.display = "block";
         }
 
@@ -72,7 +72,6 @@
                     loginBtn.textContent = "INITIATE LOGIN";
                     loginBtn.disabled = false;
                 } else {
-                    // Smooth Transition Out
                     document.getElementById('transition-overlay').classList.remove('loaded');
                     setTimeout(() => window.location.replace("dashboard.html"), 400);
                 }
@@ -84,12 +83,11 @@
             }
         }
 
-        // --- 3. Advanced Visual Engine ---
+        // --- 3. Non-Conflicting Visual Engine ---
         (function initAdvancedUI() {
             const isTouch = window.matchMedia('(pointer: coarse)').matches;
-            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             
-            // Easter Egg Logic
+            // Easter Egg
             let clicks = 0;
             document.getElementById('obsidian-title').addEventListener('click', function() {
                 clicks++;
@@ -100,42 +98,41 @@
                 }
             });
 
-            if (prefersReducedMotion) return; // Halt heavy graphics
-
-            // Custom Cursor & Parallax (Desktop Only)
+            // Ambient Light & Parallax Engine (Updates CSS variables safely)
             if (!isTouch) {
                 const dot = document.getElementById('cursor-dot');
                 const ring = document.getElementById('cursor-ring');
-                const pContainer = document.getElementById('parallax-container');
-
+                
                 window.addEventListener('mousemove', (e) => {
-                    // Cursor Follow
                     dot.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
                     ring.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
                     
-                    // Ambient Light Tracking
                     document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
                     document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
                     
-                    // 3D Parallax Depth
-                    const x = (window.innerWidth / 2 - e.clientX) / 40;
-                    const y = (window.innerHeight / 2 - e.clientY) / 40;
-                    pContainer.style.transform = `rotateY(${x}deg) rotateX(${y}deg) translateY(${y}px)`;
+                    const x = (window.innerWidth / 2 - e.clientX) / 30; // Stronger Parallax
+                    const y = (window.innerHeight / 2 - e.clientY) / 30;
+                    document.documentElement.style.setProperty('--rotate-y', `${x}deg`);
+                    document.documentElement.style.setProperty('--rotate-x', `${y}deg`);
                 });
 
-                // Hover states for cursor
                 document.querySelectorAll('button, input').forEach(el => {
                     el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
                     el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
                 });
             }
 
-            // Lightweight Canvas Particles
+            // Visible Interactive Canvas Particles
             const canvas = document.getElementById('particle-canvas');
             const ctx = canvas.getContext('2d');
             let particles = [];
-            const pCount = isTouch ? 20 : 45; // Reduce on mobile
+            const pCount = isTouch ? 30 : 60; // Denser particles
+            let pointer = { x: -1000, y: -1000 };
             
+            window.addEventListener('mousemove', (e) => { pointer.x = e.clientX; pointer.y = e.clientY; });
+            window.addEventListener('touchmove', (e) => { pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY; });
+            window.addEventListener('touchend', () => { pointer.x = -1000; pointer.y = -1000; });
+
             function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
             window.addEventListener('resize', resize);
             resize();
@@ -144,11 +141,22 @@
                 constructor() {
                     this.x = Math.random() * canvas.width;
                     this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.5;
-                    this.vy = (Math.random() - 0.5) * 0.5;
-                    this.size = Math.random() * 1.5;
+                    this.vx = (Math.random() - 0.5) * 0.6;
+                    this.vy = (Math.random() - 0.5) * 0.6;
+                    this.size = Math.random() * 2 + 1; // Larger particles
                 }
                 update() {
+                    // Repel from pointer
+                    let dx = pointer.x - this.x;
+                    let dy = pointer.y - this.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        this.vx -= (dx / dist) * 0.05;
+                        this.vy -= (dy / dist) * 0.05;
+                    }
+                    
+                    // Friction & bounds
+                    this.vx *= 0.99; this.vy *= 0.99;
                     this.x += this.vx; this.y += this.vy;
                     if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                     if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
@@ -156,13 +164,14 @@
                 draw() {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // Visually distinct
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
                     ctx.fill();
                 }
             }
             
             for (let i = 0; i < pCount; i++) particles.push(new Particle());
-            
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 particles.forEach(p => { p.update(); p.draw(); });
