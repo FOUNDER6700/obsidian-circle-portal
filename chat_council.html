@@ -16,7 +16,10 @@
         button { background-color: #c77dff; color: #000; border: none; padding: 0 20px; border-radius: 4px; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
         .back-btn { background-color: #222; color: #fff; margin-top: 15px; border: none; width: 100%; padding: 12px; border-radius: 4px; font-size: 12px; letter-spacing: 1px; cursor: pointer; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Hide the page immediately to prevent unauthorized flashing
+        document.documentElement.style.display = 'none';
+    </script>
 </head>
 <body>
     <div class="chat-container" id="main-ui" style="display: none;">
@@ -31,6 +34,7 @@
         <button class="back-btn" onclick="window.location.href='dashboard.html'">RETURN TO DASHBOARD</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
@@ -40,26 +44,38 @@
         const ROOM_TIER = "COUNCIL";
 
         document.addEventListener("DOMContentLoaded", async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) { window.location.replace("index.html"); return; }
-
-            // Maximum Security Check: Boot anyone who isn't Council or Founder
-            const { data: profile } = await supabaseClient.from('profiles').select('codename, rank').eq('id', session.user.id).single();
-            if (!profile || (profile.rank !== 'COUNCIL' && profile.rank !== 'FOUNDER')) {
-                document.body.innerHTML = "<h2 style='color:red;text-align:center;margin-top:50px;'>SECURITY ALERT: CLEARANCE DENIED</h2>";
-                setTimeout(() => window.location.replace("dashboard.html"), 2000);
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            
+            if (error || !user) {
+                window.location.replace("index.html");
                 return;
             }
 
-            myCodename = profile.codename;
+            // Extract Rank and Codename directly from Email
+            myCodename = user.email.split('@')[0].toUpperCase();
+            const rank = myCodename.split('-')[0];
+
+            // Maximum Security Check: Boot anyone who isn't Council or Founder
+            if (rank !== 'COUNCIL' && rank !== 'FOUNDER') {
+                window.location.replace("dashboard.html");
+                return;
+            }
+
+            // Authorization successful: Restore Screen Visibility
+            document.documentElement.style.display = 'block';
             document.getElementById("main-ui").style.display = "block";
 
+            // Initialize Chat
             loadMessages();
             setInterval(loadMessages, 3000);
         });
 
         async function loadMessages() {
-            const { data, error } = await supabaseClient.from('rank_chats').select('*').eq('room_tier', ROOM_TIER).order('created_at', { ascending: true });
+            const { data, error } = await supabaseClient.from('rank_chats')
+                .select('*')
+                .eq('room_tier', ROOM_TIER)
+                .order('created_at', { ascending: true });
+            
             if (error) return;
 
             const box = document.getElementById("chat-box");
@@ -79,7 +95,9 @@
             if (!text) return;
             
             input.value = "";
-            await supabaseClient.from('rank_chats').insert([{ room_tier: ROOM_TIER, author_codename: myCodename, message: text }]);
+            await supabaseClient.from('rank_chats').insert([
+                { room_tier: ROOM_TIER, author_codename: myCodename, message: text }
+            ]);
             loadMessages();
         }
     </script>
