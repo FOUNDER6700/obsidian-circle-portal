@@ -4,148 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard | The Obsidian Circle</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* PREMIUM OBSIDIAN THEME & ANIMATIONS */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-        
-        body { 
-            background: linear-gradient(135deg, #000000 0%, #0a0a0e 50%, #000000 100%);
-            background-size: 200% 200%;
-            animation: ambientShift 20s ease infinite;
-            color: #fff; 
-            min-height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            padding: 20px; 
-        }
-
-        @keyframes ambientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes entranceFade {
-            0% { opacity: 0; transform: translateY(15px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .dashboard-container { 
-            width: 100%; 
-            max-width: 480px; 
-            background-color: rgba(12, 12, 14, 0.85); 
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid #222; 
-            border-radius: 8px; 
-            padding: 30px 25px; 
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255,255,255,0.02); 
-            animation: entranceFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        .header-title { 
-            text-align: center; 
-            font-size: 18px; 
-            letter-spacing: 4px; 
-            color: #ffffff; 
-            font-weight: bold; 
-            margin-bottom: 25px; 
-            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
-        }
-        
-        /* Staggered Animations for Elements */
-        .profile-card { 
-            background-color: #101014; 
-            border: 1px solid #26262b; 
-            border-radius: 6px; 
-            padding: 18px; 
-            margin-bottom: 25px; 
-            opacity: 0;
-            animation: entranceFade 0.5s ease forwards 0.2s; /* 0.2s delay */
-        }
-        
-        .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
-        .profile-row:last-child { margin-bottom: 0; }
-        .label { color: #777; letter-spacing: 1.5px; }
-        .val-codename { color: #fff; font-weight: bold; letter-spacing: 1.5px; }
-        .badge-rank { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; letter-spacing: 2px; border: 1px solid #444; background: #000; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        
-        .menu-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
-        
-        .menu-btn { 
-            background-color: #101014; 
-            color: #dedede; 
-            border: 1px solid #2b2b32; 
-            padding: 15px; 
-            border-radius: 5px; 
-            text-align: center; 
-            font-size: 13px; 
-            font-weight: bold; 
-            letter-spacing: 2px; 
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            opacity: 0;
-            animation: entranceFade 0.5s ease forwards;
-        }
-
-        /* Sequential Delays for Buttons */
-        .menu-grid .menu-btn:nth-child(1) { animation-delay: 0.3s; }
-        .menu-grid .menu-btn:nth-child(2) { animation-delay: 0.4s; }
-        .menu-grid .menu-btn:nth-child(3) { animation-delay: 0.5s; }
-        .menu-grid .menu-btn:nth-child(4) { animation-delay: 0.6s; }
-        .menu-grid .menu-btn:nth-child(5) { animation-delay: 0.7s; }
-        .menu-grid .menu-btn:nth-child(6) { animation-delay: 0.8s; }
-        .menu-grid .menu-btn:nth-child(7) { animation-delay: 0.9s; }
-
-        /* Premium Hover & Touch Effects */
-        .menu-btn:hover { 
-            border-color: #666; 
-            background-color: #18181f; 
-            color: #fff; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-        .menu-btn:active {
-            transform: translateY(0) scale(0.98);
-        }
-        
-        /* Specialized Rank Buttons */
+        /* Rank Specific Button Colors */
         .member-chat-btn { border-color: #555 !important; color: #aaa !important; }
         .specialist-chat-btn { border-color: rgba(0, 229, 255, 0.4) !important; color: #00e5ff !important; background-color: rgba(0, 229, 255, 0.03); }
-        .specialist-chat-btn:hover { box-shadow: 0 0 15px rgba(0, 229, 255, 0.15); border-color: #00e5ff !important; }
-        
         .council-chat-btn { border-color: rgba(199, 125, 255, 0.4) !important; color: #c77dff !important; background-color: rgba(157, 78, 221, 0.03); }
-        .council-chat-btn:hover { box-shadow: 0 0 15px rgba(199, 125, 255, 0.15); border-color: #c77dff !important; }
-        
         .admin-btn { border-color: rgba(255, 77, 77, 0.4) !important; color: #ff4d4d !important; background-color: rgba(255, 77, 77, 0.03); }
-        .admin-btn:hover { box-shadow: 0 0 15px rgba(255, 77, 77, 0.15); border-color: #ff4d4d !important; }
         
-        .logout-btn { 
-            width: 100%; 
-            background-color: transparent; 
-            color: #666; 
-            border: 1px solid #222; 
-            padding: 14px; 
-            border-radius: 5px; 
-            font-size: 12px; 
-            letter-spacing: 2px; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            opacity: 0;
-            animation: entranceFade 0.5s ease forwards 1s;
-        }
-        .logout-btn:hover { color: #ff4d4d; border-color: #ff4d4d; background-color: rgba(255, 77, 77, 0.05); transform: translateY(-1px); }
-        .logout-btn:active { transform: scale(0.98); }
+        .logout-btn { background-color: transparent; color: #666; border: 1px solid #222; margin-top: 10px; }
+        .logout-btn:hover { color: #ff4d4d; border-color: #ff4d4d; background-color: rgba(255, 77, 77, 0.05); }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-container" id="dashboard-box" style="display: none;">
-        <div class="header-title">THE OBSIDIAN CIRCLE</div>
+    <!-- Advanced UI Layers -->
+    <div class="page-transition-overlay" id="transition-overlay"></div>
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div class="ambient-light"></div>
 
-        <div class="profile-card">
+    <div class="dashboard-container" id="dashboard-box" style="display: none;">
+        <div class="header-title" id="obsidian-title">THE OBSIDIAN CIRCLE</div>
+        <div id="secret-msg" style="text-align:center; margin-bottom: 20px;">[ OMEGA CLEARANCE VERIFIED ]</div>
+
+        <div class="profile-card reveal">
             <div class="profile-row">
                 <span class="label">CODENAME</span>
                 <span class="val-codename" id="user-codename">AUTHENTICATING...</span>
@@ -158,91 +43,182 @@
 
         <div class="menu-grid">
             <!-- Universal Access -->
-            <div class="menu-btn" onclick="window.location.href='projects.html'">ACTIVE PROJECTS</div>
-            <div class="menu-btn" onclick="window.location.href='teams.html'">TEAMS / DIRECTORY</div>
-            <div class="menu-btn" onclick="window.location.href='announcements.html'">ANNOUNCEMENTS</div>
+            <button class="menu-btn reveal nav-btn" data-target="projects.html">ACTIVE PROJECTS</button>
+            <button class="menu-btn reveal nav-btn" data-target="teams.html">TEAMS / DIRECTORY</button>
+            <button class="menu-btn reveal nav-btn" data-target="announcements.html">ANNOUNCEMENTS</button>
             
             <!-- Rank Specific Chats -->
-            <div class="menu-btn member-chat-btn" onclick="window.location.href='chat_member.html'">[ GLOBAL MEMBER CHAT ]</div>
-            <div class="menu-btn specialist-chat-btn" id="btn-chat-specialist" onclick="window.location.href='chat_specialist.html'" style="display: none;">[ SPECIALIST COMM-LINK ]</div>
-            <div class="menu-btn council-chat-btn" id="btn-chat-council" onclick="window.location.href='chat_council.html'" style="display: none;">[ COUNCIL COMM-LINK ]</div>
+            <button class="menu-btn member-chat-btn reveal nav-btn" data-target="chat_member.html">[ GLOBAL MEMBER CHAT ]</button>
+            <button class="menu-btn specialist-chat-btn reveal nav-btn" id="btn-chat-specialist" data-target="chat_specialist.html" style="display: none;">[ SPECIALIST COMM-LINK ]</button>
+            <button class="menu-btn council-chat-btn reveal nav-btn" id="btn-chat-council" data-target="chat_council.html" style="display: none;">[ COUNCIL COMM-LINK ]</button>
             
             <!-- Admin / Meeting -->
-            <div class="menu-btn council-chat-btn" id="btn-meeting" onclick="window.location.href='meeting.html'" style="display: none;">COUNCIL CHAMBERS</div>
-            <div class="menu-btn admin-btn" id="btn-admin" onclick="window.location.href='admin.html'" style="display: none;">[ ADMIN PANEL ]</div>
+            <button class="menu-btn council-chat-btn reveal nav-btn" id="btn-meeting" data-target="meeting.html" style="display: none;">COUNCIL CHAMBERS</button>
+            <button class="menu-btn admin-btn reveal nav-btn" id="btn-admin" data-target="admin.html" style="display: none;">[ ADMIN PANEL ]</button>
         </div>
 
-        <button class="logout-btn" id="btn-logout">DISCONNECT SESSION</button>
+        <button class="logout-btn reveal" id="btn-logout">DISCONNECT SESSION</button>
     </div>
 
     <script>
+    // --- 1. Supabase Core Logic ---
     const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+    // Page Transition Helper
+    function smoothRoute(url) {
+        document.getElementById('transition-overlay').classList.remove('loaded');
+        setTimeout(() => window.location.href = url, 400);
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
-        // 1. Verify Login
         const { data: { user }, error } = await supabaseClient.auth.getUser();
 
-        if (error || !user) {
-            window.location.replace("index.html");
-            return;
-        }
+        if (error || !user) { window.location.replace("index.html"); return; }
 
-        // 2. Extract Data from Email
         const codename = user.email.split('@')[0].toUpperCase(); 
         const rank = codename.split('-')[0]; 
 
-        // 3. Update the Profile Card text
-        const codenameEl = document.getElementById("user-codename");
-        if (codenameEl) codenameEl.textContent = codename;
-
+        document.getElementById("user-codename").textContent = codename;
         const rankEl = document.getElementById("user-rank");
+        
         if (rankEl) {
             rankEl.textContent = rank;
-            
-            // Set clearance badge colors & glows
-            if (rank === 'FOUNDER') {
-                rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d';
-                rankEl.style.boxShadow = '0 0 10px rgba(255, 77, 77, 0.2)';
-            } else if (rank === 'COUNCIL') {
-                rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff';
-                rankEl.style.boxShadow = '0 0 10px rgba(199, 125, 255, 0.2)';
-            } else if (rank === 'SPECIALIST') {
-                rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff';
-                rankEl.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.2)';
-            } else {
-                rankEl.style.color = '#888'; rankEl.style.borderColor = '#444';
-            }
+            if (rank === 'FOUNDER') { rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d'; rankEl.style.boxShadow = '0 0 10px rgba(255, 77, 77, 0.2)'; } 
+            else if (rank === 'COUNCIL') { rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff'; rankEl.style.boxShadow = '0 0 10px rgba(199, 125, 255, 0.2)'; } 
+            else if (rank === 'SPECIALIST') { rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff'; rankEl.style.boxShadow = '0 0 10px rgba(0, 229, 255, 0.2)'; } 
+            else { rankEl.style.color = '#888'; rankEl.style.borderColor = '#444'; }
         }
 
-        // 4. Reveal buttons based on clearance
         const showElement = (id) => {
             const el = document.getElementById(id);
             if (el) el.style.display = "block";
         };
 
         if (rank === 'FOUNDER' || rank === 'COUNCIL') {
-            showElement("btn-admin");
-            showElement("btn-meeting");
-            showElement("btn-chat-council");
-            showElement("btn-chat-specialist");
-        } else if (rank === 'SPECIALIST') {
-            showElement("btn-chat-specialist");
-        }
+            showElement("btn-admin"); showElement("btn-meeting"); showElement("btn-chat-council"); showElement("btn-chat-specialist");
+        } else if (rank === 'SPECIALIST') { showElement("btn-chat-specialist"); }
 
-        // 5. Reveal the dashboard (Triggers CSS Animations)
-        showElement("dashboard-box");
+        document.getElementById("dashboard-box").style.display = "block";
 
-        // 6. Secure Logout
+        // Navigation Buttons Intercept
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                smoothRoute(this.getAttribute('data-target'));
+            });
+        });
+
         const logoutBtn = document.getElementById("btn-logout");
         if (logoutBtn) {
             logoutBtn.addEventListener("click", async () => {
                 await supabaseClient.auth.signOut();
-                window.location.replace("index.html");
+                smoothRoute("index.html");
             });
         }
+
+        initAdvancedUI(); // Boot up visual engine
     });
+
+    // --- 2. Advanced Visual Engine ---
+    function initAdvancedUI() {
+        // Page load reveal
+        document.getElementById('transition-overlay').classList.add('loaded');
+        
+        const isTouch = window.matchMedia('(pointer: coarse)').matches;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Easter Egg
+        let clicks = 0;
+        document.getElementById('obsidian-title').addEventListener('click', function() {
+            clicks++;
+            if (clicks === 5) {
+                this.classList.add('glitch-active');
+                document.getElementById('secret-msg').style.display = 'block';
+                setTimeout(() => { this.classList.remove('glitch-active'); document.getElementById('secret-msg').style.display = 'none'; clicks = 0; }, 3000);
+            }
+        });
+
+        // Intersection Observer (Staggered Reveals)
+        if (!prefersReducedMotion) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => entry.target.classList.add('visible'), index * 100); // Stagger delay
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        } else {
+            document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        }
+
+        if (prefersReducedMotion) return;
+
+        // Cursor & Parallax (Desktop)
+        if (!isTouch) {
+            const dot = document.getElementById('cursor-dot');
+            const ring = document.getElementById('cursor-ring');
+            const box = document.getElementById('dashboard-box');
+
+            window.addEventListener('mousemove', (e) => {
+                dot.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
+                ring.style.transform = `translate(calc(${e.clientX}px - 50%), calc(${e.clientY}px - 50%))`;
+                document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+                document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+                
+                const x = (window.innerWidth / 2 - e.clientX) / 50;
+                const y = (window.innerHeight / 2 - e.clientY) / 50;
+                box.style.transform = `rotateY(${x}deg) rotateX(${y}deg) translateY(${y}px)`;
+            });
+
+            document.querySelectorAll('button').forEach(el => {
+                el.addEventListener('mouseenter', () => ring.classList.add('hovering'));
+                el.addEventListener('mouseleave', () => ring.classList.remove('hovering'));
+            });
+        }
+
+        // Lightweight Particles
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const pCount = isTouch ? 15 : 35; // Lower count for dashboard to keep performance pristine
+        
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.size = Math.random() * 1.5;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fill();
+            }
+        }
+        
+        for (let i = 0; i < pCount; i++) particles.push(new Particle());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
     </script>
 </body>
 </html>
