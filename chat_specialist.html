@@ -32,25 +32,33 @@
     </div>
 
     <!-- Supabase Sub-Page Security -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    document.documentElement.style.display = 'none';
+    <script>
+        // 1. Hide the document body immediately to prevent screen flickering
+        document.documentElement.style.display = 'none';
 
-    const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseUrl = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ'; 
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function verifyClearance() {
-        const { data: { user }, error } = await supabaseClient.auth.getUser();
-        if (!user || error) {
-            window.location.replace("index.html");
-        } else {
-            document.documentElement.style.display = 'block';
+        async function verifyClearance() {
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            if (!user || error) {
+                window.location.replace("index.html");
+            } else {
+                // 2. Reveal the main webpage document
+                document.documentElement.style.display = 'block';
+                // 3. Specifically reveal the chat container (Fixes the black screen!)
+                const mainUi = document.getElementById('main-ui');
+                if (mainUi) mainUi.style.display = 'block';
+            }
         }
-    }
-    verifyClearance();
-</script>
-    
+        
+        // Prevents the SEND button from crashing the page until chat logic is added
+        function sendMessage() {
+            console.log("Message sending function ready for database connection.");
+        }
+
+        verifyClearance();
+    </script>
 </body>
 </html>
-              
