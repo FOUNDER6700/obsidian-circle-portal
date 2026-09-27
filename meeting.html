@@ -42,7 +42,6 @@
         }
     </style>
     <script>
-        // Hide the page immediately to prevent unauthorized flashing
         document.documentElement.style.display = 'none';
     </script>
 </head>
@@ -86,36 +85,27 @@
                 return;
             }
 
-            // Extract Rank directly from Email
             const emailPrefix = user.email.split('@')[0].toUpperCase();
             myRank = emailPrefix.split('-')[0];
             
-            // Maximum Security Check: Boot anyone who isn't Council or Founder
             if (myRank !== 'FOUNDER' && myRank !== 'COUNCIL') {
                 window.location.replace("dashboard.html");
                 return;
             }
 
-            // Authorization successful: Restore Screen Visibility
             document.documentElement.style.display = 'block';
             document.getElementById("main-box").style.display = "block";
             
-            // Unhide video controls if Founder
             if (myRank === 'FOUNDER') {
                 document.getElementById("founder-controls").style.display = "flex";
             }
 
             checkMeetingStatus();
-            // Check the database every 3 seconds to see if Founder started it
             setInterval(checkMeetingStatus, 3000); 
         });
 
         async function checkMeetingStatus() {
             const { data, error } = await supabaseClient.from('meeting_status').select('is_active').eq('id', 1).single();
-            if (error) {
-                console.log("Status check error: ", error.message);
-                return;
-            }
             if (data && data.is_active !== isMeetingLive) {
                 isMeetingLive = data.is_active;
                 updateUI();
@@ -123,16 +113,14 @@
         }
 
         window.setMeetingState = async function(state) {
-            // Attempt to update the database
-            const { error } = await supabaseClient.from('meeting_status').update({ is_active: state }).eq('id', 1);
+            // "Upsert" will automatically create the database row if it is currently missing
+            const { error } = await supabaseClient.from('meeting_status').upsert({ id: 1, is_active: state });
             
-            // If the database rejects it, show the exact error on the screen
             if (error) {
                 alert("DATABASE REJECTED COMMAND:\n" + error.message);
                 return;
             }
             
-            // If successful, update the screen immediately
             isMeetingLive = state;
             updateUI();
         };
@@ -149,7 +137,7 @@
             } else {
                 vidBox.style.display = "none";
                 waitBox.style.display = "block";
-                frame.src = ""; // Cuts the camera/mic feed immediately
+                frame.src = ""; 
             }
         }
     </script>
