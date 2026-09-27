@@ -56,7 +56,7 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         document.addEventListener("DOMContentLoaded", async () => {
-            // 1. Verify Login & Admin Clearance
+            // 1. Verify Login Credentials
             const { data: { user }, error } = await supabaseClient.auth.getUser();
             
             if (error || !user) {
@@ -67,8 +67,8 @@
             const emailPrefix = user.email.split('@')[0].toUpperCase();
             const rank = emailPrefix.split('-')[0];
 
-            // 2. Reject anyone who isn't FOUNDER or COUNCIL
-            if (rank !== 'FOUNDER' && rank !== 'COUNCIL') {
+            // 2. Strict Founder-Only Lockdown (Council is now rejected)
+            if (rank !== 'FOUNDER') {
                 window.location.replace("dashboard.html");
                 return;
             }
