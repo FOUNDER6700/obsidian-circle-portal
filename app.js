@@ -1,5 +1,5 @@
 // 1. Initialize Supabase directly inside the logic file
-const supabaseUrl = 'b7a8eb95-f61c-4738-9f7f-fcbb019eff62'; // Replace with your URL
+const supabaseUrl = 'ahridkmlgjsmlqkqatrz'; // Replace with your URL
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQq'; // Replace with your Key
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
