@@ -1,49 +1,40 @@
-// 1. YOUR SAFE SUPABASE CONNECTION KEYS
-const SUPABASE_URL = 'https://ahridkmlgjsmlqkqatrz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFocmlka21sZ2pzbWxxa3FhdHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNjYwODUsImV4cCI6MjEwNTY0MjA4NX0.r_vPhWLs-hKg7xk6lyge8ITkPP30y53442jrGqNwhWQ';
+async function handleLogin(event) {
+    // 1. THIS STOPS THE PAGE FROM REFRESHING Wiping the screen
+    event.preventDefault(); 
 
-// Initialize Supabase correctly for browser (renamed to supabaseClient)
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// 2. WAIT FOR THE PAGE TO LOAD
-document.addEventListener("DOMContentLoaded", () => {
-    
-    const loginForm = document.getElementById("login-form");
-    const errorMessage = document.getElementById("error-message");
+    let inputId = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorMsg = document.getElementById("error-msg");
     const loginBtn = document.getElementById("login-btn");
 
-    if (loginForm) {
-        loginForm.addEventListener("submit", async (e) => {
-            e.preventDefault(); // Stop page from refreshing
-            
-            // Get what the user typed
-            const memberId = document.getElementById("member-id").value.trim().toUpperCase();
-            const password = document.getElementById("password").value;
+    // Clear previous errors
+    errorMsg.style.display = "none";
 
-            // Clear old errors and show loading text
-            errorMessage.textContent = "";
-            loginBtn.textContent = "VERIFYING...";
-            loginBtn.disabled = true;
-
-            // SECURITY TRICK: Convert Member ID into the hidden auth email format
-            const authEmail = `${memberId}@obsidian.circle`.toLowerCase();
-
-            // 3. SEND TO SUPABASE FOR SECURE VERIFICATION
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: authEmail,
-                password: password
-            });
-
-            if (error) {
-                // If wrong password or ID, show error
-                errorMessage.textContent = "Authentication Failed: Incorrect ID or Password.";
-                loginBtn.textContent = "AUTHENTICATE";
-                loginBtn.disabled = false;
-            } else {
-                // If successful, take them to the Dashboard
-                loginBtn.textContent = "ACCESS GRANTED";
-                window.location.href = "dashboard.html";
-            }
-        });
+    // 2. Format the Codename for Supabase (The Hyphen Bypass)
+    if (!inputId.includes('@')) {
+        inputId = inputId.toLowerCase() + '@obsidian.com';
     }
-});
+
+    // 3. Trigger Loading State & Disable Button to prevent double-clicks
+    loginBtn.textContent = "AUTHENTICATING...";
+    loginBtn.disabled = true;
+    loginBtn.style.opacity = "0.7";
+    
+    // 4. Process Existing Supabase Authentication
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: inputId,
+        password: password
+    });
+
+    if (error) {
+        // 5. Handle Failure: Show error, reset button, do NOT wipe inputs
+        errorMsg.textContent = "ACCESS DENIED: " + error.message.toUpperCase();
+        errorMsg.style.display = "block";
+        loginBtn.textContent = "INITIATE LOGIN";
+        loginBtn.disabled = false;
+        loginBtn.style.opacity = "1";
+    } else {
+        // 6. Handle Success: Redirect to the secure dashboard
+        window.location.replace("dashboard.html");
+    }
+}
