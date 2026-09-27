@@ -74,7 +74,7 @@
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     document.addEventListener("DOMContentLoaded", async () => {
-        // 1. Verify the user is logged in
+        // 1. Verify Login
         const { data: { user }, error } = await supabaseClient.auth.getUser();
 
         if (error || !user) {
@@ -82,44 +82,57 @@
             return;
         }
 
-        // 2. Extract the rank directly from the email (e.g., "founder-01" -> "FOUNDER")
-        const emailPrefix = user.email.split('@')[0]; 
-        const rank = emailPrefix.split('-')[0].toUpperCase();
+        // 2. Extract Data from Email
+        const codename = user.email.split('@')[0].toUpperCase(); // Turns "founder-01" into "FOUNDER-01"
+        const rank = codename.split('-')[0]; // Turns "FOUNDER-01" into "FOUNDER"
 
-        // 3. Update the Rank Badge (Fixed typo: lowercase 'r')
-        const rankBadge = document.getElementById("rank-badge") || document.createElement("span");
-        rankBadge.textContent = rank;
+        // 3. Update the Profile Card text
+        const codenameEl = document.getElementById("user-codename");
+        if (codenameEl) codenameEl.textContent = codename;
 
-        // 4. Set colors based on rank
-        if (rank === 'FOUNDER') {
-            rankBadge.style.color = '#ff4d4d'; rankBadge.style.borderColor = '#ff4d4d';
-        } else if (rank === 'COUNCIL') {
-            rankBadge.style.color = '#c77dff'; rankBadge.style.borderColor = '#c77dff';
-        } else if (rank === 'SPECIALIST') {
-            rankBadge.style.color = '#00e5ff'; rankBadge.style.borderColor = '#00e5ff';
-        } else {
-            rankBadge.style.color = '#888'; rankBadge.style.borderColor = '#444';
+        const rankEl = document.getElementById("user-rank");
+        if (rankEl) {
+            rankEl.textContent = rank;
+            
+            // Set clearance badge colors
+            if (rank === 'FOUNDER') {
+                rankEl.style.color = '#ff4d4d'; rankEl.style.borderColor = '#ff4d4d';
+            } else if (rank === 'COUNCIL') {
+                rankEl.style.color = '#c77dff'; rankEl.style.borderColor = '#c77dff';
+            } else if (rank === 'SPECIALIST') {
+                rankEl.style.color = '#00e5ff'; rankEl.style.borderColor = '#00e5ff';
+            } else {
+                rankEl.style.color = '#888'; rankEl.style.borderColor = '#444';
+            }
         }
 
-        // 5. Reveal buttons based on clearance
+        // 4. Reveal buttons based on clearance
+        const showElement = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = "block";
+        };
+
         if (rank === 'FOUNDER' || rank === 'COUNCIL') {
-            document.getElementById("btn-admin").style.display = "block";
-            document.getElementById("btn-meeting").style.display = "block";
-            document.getElementById("btn-chat-council").style.display = "block";
-            document.getElementById("btn-chat-specialist").style.display = "block";
+            showElement("btn-admin");
+            showElement("btn-meeting");
+            showElement("btn-chat-council");
+            showElement("btn-chat-specialist");
         } else if (rank === 'SPECIALIST') {
-            document.getElementById("btn-chat-specialist").style.display = "block";
+            showElement("btn-chat-specialist");
         }
 
-        // 6. Reveal the dashboard (Fixes the black screen)
-        document.getElementById("dashboard-box").style.display = "block";
+        // 5. Reveal the dashboard
+        showElement("dashboard-box");
 
-        // 7. Secure Logout
-        document.getElementById("btn-logout").addEventListener("click", async () => {
-            await supabaseClient.auth.signOut();
-            window.location.replace("index.html");
-        });
+        // 6. Secure Logout
+        const logoutBtn = document.getElementById("btn-logout");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", async () => {
+                await supabaseClient.auth.signOut();
+                window.location.replace("index.html");
+            });
+        }
     });
-   </script>    
+                    </script>
 </body>
 </html>
