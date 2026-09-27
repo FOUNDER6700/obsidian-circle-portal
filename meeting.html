@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Meeting Room | The Obsidian Circle</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         body { background-color: #000; color: #fff; font-family: monospace; margin: 0; padding: 20px; }
         .meeting-container {
@@ -112,7 +111,11 @@
         });
 
         async function checkMeetingStatus() {
-            const { data } = await supabaseClient.from('meeting_status').select('is_active').eq('id', 1).single();
+            const { data, error } = await supabaseClient.from('meeting_status').select('is_active').eq('id', 1).single();
+            if (error) {
+                console.log("Status check error: ", error.message);
+                return;
+            }
             if (data && data.is_active !== isMeetingLive) {
                 isMeetingLive = data.is_active;
                 updateUI();
@@ -120,7 +123,16 @@
         }
 
         window.setMeetingState = async function(state) {
-            await supabaseClient.from('meeting_status').update({ is_active: state }).eq('id', 1);
+            // Attempt to update the database
+            const { error } = await supabaseClient.from('meeting_status').update({ is_active: state }).eq('id', 1);
+            
+            // If the database rejects it, show the exact error on the screen
+            if (error) {
+                alert("DATABASE REJECTED COMMAND:\n" + error.message);
+                return;
+            }
+            
+            // If successful, update the screen immediately
             isMeetingLive = state;
             updateUI();
         };
